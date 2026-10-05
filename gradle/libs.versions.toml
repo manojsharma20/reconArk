@@ -8,7 +8,7 @@ junit = "5.13.4"               # kernel/plugin modules; Spring modules use the B
 assertj = "3.27.3"
 archunit = "1.4.1"
 kafka = "4.1.0"                # verify
-slf4j = "2.0.17"
+slf4j = "2.0.20"
 
 [libraries]
 spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
