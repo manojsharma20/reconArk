@@ -1,0 +1,12 @@
+{
+  "name": "@reconark/module-sdk",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "description": "The contract between the reconArk shell and its feature modules (UI Lego bricks), plus shared helpers.",
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "@tanstack/react-query": "^5.0.0"
+  }
+}

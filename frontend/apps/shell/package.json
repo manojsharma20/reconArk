@@ -1,0 +1,18 @@
+{
+  "name": "@reconark/shell",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@reconark/module-sdk": "0.2.0",
+    "@reconark/module-admin": "0.2.0",
+    "@reconark/module-recon": "0.2.0",
+    "@reconark/module-reports": "0.2.0",
+    "@reconark/module-operations": "0.2.0"
+  }
+}

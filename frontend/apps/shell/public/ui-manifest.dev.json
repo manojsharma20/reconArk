@@ -1,0 +1,23 @@
+{
+  "environment": "local (no BFF)",
+  "modules": [
+    { "id": "admin", "title": "Onboarding", "path": "/admin", "roles": [], "enabled": true, "order": 10 },
+    {
+      "id": "recon",
+      "title": "Recon workbench",
+      "path": "/recon",
+      "roles": [],
+      "enabled": true,
+      "order": 20
+    },
+    { "id": "reports", "title": "Reports", "path": "/reports", "roles": [], "enabled": true, "order": 30 },
+    {
+      "id": "operations",
+      "title": "Operations",
+      "path": "/operations",
+      "roles": [],
+      "enabled": true,
+      "order": 40
+    }
+  ]
+}
