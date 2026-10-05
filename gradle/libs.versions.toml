@@ -6,7 +6,7 @@ spring-boot = "4.1.1"          # verify: latest 4.1.x patch
 dependency-management = "1.1.7"
 junit = "5.13.4"               # kernel/plugin modules; Spring modules use the Boot-managed version
 assertj = "3.27.3"
-archunit = "1.4.1"
+archunit = "1.5.1"
 kafka = "4.1.0"                # verify
 slf4j = "2.0.17"
 
