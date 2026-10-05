@@ -1,0 +1,15 @@
+# Activate with SPRING_PROFILES_ACTIVE=keycloak to log in against the local Keycloak in deploy/local/docker-compose.yml.
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          reconark:
+            provider: reconark
+            client-id: reconark-web-bff
+            client-secret: ${BFF_CLIENT_SECRET}          # injected from the secret manager in shared environments
+            authorization-grant-type: authorization_code
+            scope: [openid, profile, roles]
+        provider:
+          reconark:
+            issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/reconark}

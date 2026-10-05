@@ -1,0 +1,33 @@
+# report-worker — Renders reports through report-renderer extensions into the object store.
+spring:
+  application:
+    name: report-worker
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  config:
+    import: optional:file:./config/composition/report-worker.yaml
+server:
+  port: ${PORT:8094}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,plugins,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+reconark:
+  security:
+    dev-mode: ${RECONARK_DEV_MODE:false}
+  composition:
+    environment: ${RECONARK_ENV:local}
+    enabled:
+      - report-csv
+      - bus-inmemory
+      - storage-filesystem

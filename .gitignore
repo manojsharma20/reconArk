@@ -1,0 +1,29 @@
+# Build outputs
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+out/
+*.class
+# Frontend
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+# Local runtime data and secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.tfvars
+!*.example.tfvars
+config/local-secrets/
+# Claude Code local overrides
+.claude/settings.local.json

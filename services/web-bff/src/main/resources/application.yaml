@@ -1,0 +1,44 @@
+# web-bff — Backend-for-frontend: OIDC token handler, config-driven route table, UI manifest.
+spring:
+  application:
+    name: web-bff
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  config:
+    import: optional:file:./config/composition/web-bff.yaml
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,plugins,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+reconark:
+  security:
+    dev-mode: ${RECONARK_DEV_MODE:false}
+  composition:
+    environment: ${RECONARK_ENV:local}
+    enabled: []
+  bff:
+    dev-mode: ${RECONARK_DEV_MODE:false}
+    environment: ${RECONARK_ENV:local}
+    routes:
+      admin: ${ADMIN_API_URL:http://localhost:8081}
+      ingestion: ${INGESTION_API_URL:http://localhost:8082}
+      recon: ${RECON_API_URL:http://localhost:8083}
+      reports: ${REPORTS_API_URL:http://localhost:8084}
+      ops: ${OPERATIONS_API_URL:http://localhost:8085}
+    modules:
+      - { id: admin, title: Onboarding, path: /admin, roles: [ONBOARDING_MAKER, ONBOARDING_CHECKER, OPERATOR], enabled: true, order: 10 }
+      - { id: recon, title: Recon workbench, path: /recon, roles: [RECON_ANALYST, RECON_SUPERVISOR, AUDITOR], enabled: true, order: 20 }
+      - { id: reports, title: Reports, path: /reports, roles: [REPORT_VIEWER, REPORT_EXPORTER, AUDITOR], enabled: true, order: 30 }
+      - { id: operations, title: Operations, path: /operations, roles: [OPERATOR], enabled: true, order: 40 }

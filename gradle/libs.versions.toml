@@ -1,0 +1,26 @@
+# reconArk version catalog — the single place where versions live (ADR-0014).
+# Versions marked "verify" must be confirmed at each release train (architecture §17).
+[versions]
+java = "25"
+spring-boot = "4.1.1"          # verify: latest 4.1.x patch
+dependency-management = "1.1.7"
+junit = "5.13.4"               # kernel/plugin modules; Spring modules use the Boot-managed version
+assertj = "3.27.3"
+archunit = "1.4.1"
+kafka = "4.1.0"                # verify
+slf4j = "2.0.17"
+
+[libraries]
+spring-boot-gradle-plugin = { module = "org.springframework.boot:spring-boot-gradle-plugin", version.ref = "spring-boot" }
+dependency-management-plugin = { module = "io.spring.gradle:dependency-management-plugin", version.ref = "dependency-management" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+archunit-junit5 = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
+kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

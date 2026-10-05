@@ -1,0 +1,34 @@
+# admin-api — Onboarding and configuration: providers, pipelines, rule sets, maker-checker, plugin catalog.
+spring:
+  application:
+    name: admin-api
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  config:
+    import: optional:file:./config/composition/admin-api.yaml
+server:
+  port: ${PORT:8081}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,plugins,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+reconark:
+  security:
+    dev-mode: ${RECONARK_DEV_MODE:false}
+  composition:
+    environment: ${RECONARK_ENV:local}
+    enabled:
+      - core-stages
+      - format-delimited
+      - recon-standard
+      - report-csv

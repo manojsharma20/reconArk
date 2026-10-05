@@ -1,0 +1,34 @@
+# ingestion-api — Partner push: authenticated batches stored as raw artifacts, run requested via the outbox.
+spring:
+  application:
+    name: ingestion-api
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  config:
+    import: optional:file:./config/composition/ingestion-api.yaml
+server:
+  port: ${PORT:8082}
+  shutdown: graceful
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,plugins,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+reconark:
+  security:
+    dev-mode: ${RECONARK_DEV_MODE:false}
+  composition:
+    environment: ${RECONARK_ENV:local}
+    enabled:
+      - core-stages
+      - format-delimited
+      - bus-inmemory
+      - storage-filesystem
