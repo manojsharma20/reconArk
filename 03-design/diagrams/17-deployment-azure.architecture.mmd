@@ -1,0 +1,21 @@
+%% Azure reference deployment (Mermaid architecture-beta; needs Mermaid 11+)
+architecture-beta
+  group region(cloud)[Azure Region three zones]
+  group vnet(cloud)[VNet private endpoints] in region
+
+  service edge(internet)[Front Door WAF and APIM] in region
+  service aks(server)[AKS reconArk services] in vnet
+  service pg(database)[PostgreSQL Flexible Server HA and replicas] in vnet
+  service kafka(server)[Event Hubs Kafka or Confluent or Strimzi] in vnet
+  service redis(database)[Azure Managed Redis] in vnet
+  service blob(disk)[Blob Storage with SFTP] in region
+  service kv(server)[Key Vault and Managed HSM] in region
+  service dr(database)[DR region geo replica]
+
+  edge:R --> L:aks
+  aks:R --> L:pg
+  aks:B --> T:kafka
+  aks:T --> B:redis
+  aks:L --> R:blob
+  aks:B --> T:kv
+  pg:R --> L:dr

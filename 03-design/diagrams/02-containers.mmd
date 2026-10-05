@@ -1,0 +1,45 @@
+%% reconArk — containers (C4 level 2)
+flowchart TB
+  subgraph edge[Edge]
+    waf[WAF + API gateway]
+  end
+  subgraph k8s[Kubernetes — stateless, autoscaled]
+    onb[onboarding-api]
+    gw[ingestion-gateway<br/>push REST, gRPC, SOAP]
+    qry[query-api]
+    rep[report-service]
+    sch[scheduler-planner<br/>planner · admission control ·<br/>reclaimer · partition maintenance]
+    ew[ingestion-worker]
+    rw[recon-worker]
+    out[outbox-relay]
+  end
+  subgraph data[Data and platform services]
+    pg[(PostgreSQL primary<br/>writers only)]
+    rr[(Read replicas<br/>every other read)]
+    obj[(Object storage<br/>raw artifacts, reports)]
+    bus{{Message bus<br/>Kafka or RabbitMQ or ActiveMQ — one active}}
+    kv[(Valkey / Redis<br/>rate limits, nonces)]
+    sm[Secret manager + KMS]
+  end
+
+  waf --> onb & gw & qry & rep
+  onb -- writes --> pg
+  onb -- reads --> rr
+  gw --> obj
+  gw -- run request --> pg
+  gw --> kv
+  sch -- claims, plans --> pg
+  sch -- reads --> rr
+  out -- poll committed events --> pg
+  out --> bus
+  bus --> ew & rw & rep
+  ew -- stream ranges --> obj
+  ew -- COPY + merge --> pg
+  ew -- lookups --> rr
+  rw -- candidate reads --> rr
+  rw -- outcomes --> pg
+  qry -- reads --> rr
+  rep -- reads --> rr
+  rep -- encrypted files --> obj
+  onb & gw & ew & rw --> sm
+  pg -. streaming replication .-> rr

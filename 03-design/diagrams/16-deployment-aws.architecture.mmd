@@ -1,0 +1,23 @@
+%% AWS reference deployment (Mermaid architecture-beta; needs Mermaid 11+)
+architecture-beta
+  group region(cloud)[AWS Region three AZs]
+  group vpc(cloud)[VPC private subnets] in region
+
+  service edge(internet)[Shield WAF ALB] in region
+  service eks(server)[EKS reconArk services] in vpc
+  service aurora(database)[Aurora PostgreSQL writer and readers] in vpc
+  service msk(server)[Amazon MSK Kafka] in vpc
+  service valkey(database)[ElastiCache Valkey] in vpc
+  service s3(disk)[S3 raw and reports] in region
+  service sftp(internet)[Transfer Family SFTP] in region
+  service secrets(server)[Secrets Manager and KMS] in region
+  service dr(database)[DR region Aurora Global Database]
+
+  edge:R --> L:eks
+  eks:R --> L:aurora
+  eks:B --> T:msk
+  eks:T --> B:valkey
+  sftp:R --> L:s3
+  eks:L --> R:s3
+  eks:B --> T:secrets
+  aurora:R --> L:dr

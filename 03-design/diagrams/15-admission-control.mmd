@@ -1,0 +1,21 @@
+%% Database admission control and fair scheduling
+flowchart TB
+  subgraph runs[Concurrent runs]
+    rt[Real-time / streaming]
+    sm[Small runs]
+    lg[Large runs 1..n]
+  end
+  wfq[Weighted fair scheduler<br/>per run class · per-provider caps]
+  ac{Admission controller<br/>capacity allowance per class}
+  sig[[Live DB signals:<br/>write latency · IO wait · WAL rate ·<br/>replication lag · checkpoints · lock waits]]
+  workers[Workers<br/>back-pressure: slow message intake]
+  pg[(Primary)]
+
+  rt -- reserved capacity --> wfq
+  sm -- reserved capacity --> wfq
+  lg -- shared remainder --> wfq
+  wfq --> ac
+  sig --> ac
+  ac -- "grant / throttle" --> workers
+  workers --> pg
+  pg -. metrics .-> sig

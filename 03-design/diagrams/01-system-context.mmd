@@ -1,0 +1,20 @@
+%% reconArk — system context (C4 level 1)
+flowchart LR
+  subgraph partners[Partners]
+    acq[Card acquirers<br/>files over SFTP or object storage, PGP]
+    mer[Merchants and exchange partners<br/>files or API pull]
+    api[API partners<br/>push over REST, SOAP, gRPC]
+  end
+  internal[Internal payment systems<br/>events and APIs]
+  users[Onboarding team, recon analysts,<br/>supervisors, auditors]
+  idp[Bank identity provider<br/>OIDC with MFA]
+  downstream[Downstream consumers<br/>settlement, finance, BI]
+  ra(((reconArk)))
+
+  acq -- "SFTP / object storage" --> ra
+  mer -- "files / API pull" --> ra
+  api -- "mTLS + signed requests" --> ra
+  internal -- "events / API" --> ra
+  users -- "onboarding, recon, reports" --> ra
+  ra -- "OIDC login, step-up MFA" --> idp
+  ra -- "outcome events, APIs, reports" --> downstream

@@ -1,0 +1,21 @@
+%% GCP reference deployment (Mermaid architecture-beta; needs Mermaid 11+)
+architecture-beta
+  group region(cloud)[GCP Region three zones]
+  group vpc(cloud)[VPC Private Service Connect] in region
+
+  service edge(internet)[Cloud Armor LB and Apigee] in region
+  service gke(server)[GKE reconArk services and SFTP gateway] in vpc
+  service alloy(database)[AlloyDB primary and read pool] in vpc
+  service kafka(server)[Managed Service for Apache Kafka] in vpc
+  service mem(database)[Memorystore Valkey] in vpc
+  service gcs(disk)[Cloud Storage raw and reports] in region
+  service sm(server)[Secret Manager and Cloud KMS] in region
+  service dr(database)[DR region cross region replica]
+
+  edge:R --> L:gke
+  gke:R --> L:alloy
+  gke:B --> T:kafka
+  gke:T --> B:mem
+  gke:L --> R:gcs
+  gke:B --> T:sm
+  alloy:R --> L:dr

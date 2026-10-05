@@ -1,0 +1,11 @@
+%% Chunk / bucket / group claim
+stateDiagram-v2
+  [*] --> AVAILABLE
+  AVAILABLE --> CLAIMED : UPDATE ... SET claim_token, claimed_by WHERE status = AVAILABLE RETURNING
+  CLAIMED --> CLAIMED : heartbeat (WHERE claim_token = mine)
+  CLAIMED --> COMPLETED : commit unit (WHERE claim_token = mine)
+  CLAIMED --> AVAILABLE : heartbeat stale → reclaimer releases (attempt + 1)
+  CLAIMED --> AVAILABLE : worker fails → releases own claim
+  AVAILABLE --> DEAD_LETTERED : attempts exhausted
+  COMPLETED --> [*]
+  DEAD_LETTERED --> AVAILABLE : operator requeue

@@ -1,0 +1,24 @@
+%% Recon — batch run for (rule set, business date)
+sequenceDiagram
+  autonumber
+  participant SCH as scheduler-planner
+  participant AC as admission controller
+  participant PG as PostgreSQL primary
+  participant RR as Read replica
+  participant BUS as Message bus
+  participant R as recon-worker (n)
+
+  SCH->>RR: dependent ETL runs final? (read)
+  SCH->>AC: request capacity (run class)
+  AC-->>SCH: allowance (writers, rows/s)
+  SCH->>PG: tx: recon_run + buckets by key_hash range + outbox(bucket-ready xN)
+  par many workers
+    BUS->>R: bucket(run, rule set, date, hash range, required LSN)
+    R->>PG: claim bucket
+    R->>RR: wait until replay LSN >= required (bounded)
+    R->>RR: REPEATABLE READ READ ONLY — candidate join on canonical_match_key
+    R->>R: evaluate rules: keys, cardinality, comparators, tolerances, severities
+    R->>PG: tx: recon_group versions + members + field diffs + counts + complete claim + outbox
+  end
+  SCH->>PG: tx (advisory lock on scope): summary, finalize day if no other run of the scope is active
+  Note over SCH,PG: outcome-changed and exception-raised events published by outbox-relay

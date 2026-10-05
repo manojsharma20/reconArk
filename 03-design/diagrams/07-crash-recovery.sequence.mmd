@@ -1,0 +1,18 @@
+%% Self-healing — worker dies mid-chunk
+sequenceDiagram
+  autonumber
+  participant W1 as ingestion-worker A
+  participant PG as PostgreSQL primary
+  participant SCH as scheduler-planner (reclaimer)
+  participant BUS as Message bus
+  participant W2 as ingestion-worker B
+
+  W1->>PG: claim chunk 42 (token T1)
+  W1-->>PG: heartbeat
+  Note over W1: pod killed (kill -9) — no commit
+  SCH->>PG: find claims with heartbeat older than stale threshold
+  SCH->>PG: tx: release chunk 42 (only if token = T1), truncate its staging, attempt+1, outbox(chunk-ready)
+  BUS->>W2: chunk 42
+  W2->>PG: claim chunk 42 (token T2)
+  W2->>PG: tx: merge (idempotent on source + business key + date + version) + complete
+  Note over SCH,W2: after max attempts the chunk dead-letters, the run is flagged, other runs continue

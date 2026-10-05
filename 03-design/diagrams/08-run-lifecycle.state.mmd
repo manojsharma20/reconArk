@@ -1,0 +1,18 @@
+%% Ingestion run / recon run lifecycle (saga)
+stateDiagram-v2
+  [*] --> QUEUED : request accepted (idempotency key)
+  QUEUED --> WAITING : same scope already running
+  WAITING --> QUEUED : scope released
+  QUEUED --> PLANNING : admission granted
+  PLANNING --> RUNNING : chunks / buckets published
+  RUNNING --> RUNNING : chunk completed · heartbeat
+  RUNNING --> FINALIZING : all units complete
+  FINALIZING --> COMPLETED : counts balance, no rejects
+  FINALIZING --> COMPLETED_WITH_REJECTS : counts balance, rejects present
+  FINALIZING --> FAILED : counts do not balance
+  RUNNING --> FAILED : unit dead-lettered after max attempts
+  RUNNING --> CANCELLED : operator cancel
+  FAILED --> QUEUED : replay (new run, supersedes)
+  COMPLETED --> [*]
+  COMPLETED_WITH_REJECTS --> [*]
+  CANCELLED --> [*]

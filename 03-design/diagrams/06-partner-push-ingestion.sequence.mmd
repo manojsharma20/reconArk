@@ -1,0 +1,22 @@
+%% Partner push over REST / gRPC / SOAP
+sequenceDiagram
+  autonumber
+  participant P as Partner
+  participant WAF as WAF + API gateway
+  participant GW as ingestion-gateway
+  participant KV as Valkey (nonces)
+  participant OBJ as Object storage
+  participant PG as PostgreSQL primary
+
+  P->>WAF: POST batch (mTLS client cert, Idempotency-Key, signature over body+timestamp+nonce)
+  WAF->>GW: forward (rate-limited, size-limited)
+  GW->>GW: verify certificate pin, signature, timestamp window
+  GW->>KV: SET nonce NX EX 300
+  alt nonce reused or stale
+    GW-->>P: 401 problem details (no internals)
+  else accepted
+    GW->>GW: validate against contract (depth, sizes, unknown fields rejected)
+    GW->>OBJ: store payload as raw artifact
+    GW->>PG: tx: raw_artifact + ingestion_run (idempotency key) + outbox
+    GW-->>P: 202 + run public_id (per-record results available via status API)
+  end

@@ -1,0 +1,10 @@
+%% Recon exception workflow
+stateDiagram-v2
+  [*] --> OPEN : mismatch / unmatched / failed-pending
+  OPEN --> ASSIGNED : supervisor or auto-assign
+  ASSIGNED --> PENDING_APPROVAL : analyst proposes resolution
+  PENDING_APPROVAL --> ASSIGNED : checker sends back
+  PENDING_APPROVAL --> RESOLVED : checker ≠ resolver, step-up MFA
+  RESOLVED --> REOPENED : underlying data changed (new group version)
+  REOPENED --> ASSIGNED
+  RESOLVED --> [*]

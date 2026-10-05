@@ -1,0 +1,37 @@
+%% ETL — file ingestion (pull), end to end
+sequenceDiagram
+  autonumber
+  participant SCH as scheduler-planner
+  participant SRC as Partner SFTP / bucket
+  participant OBJ as Object storage
+  participant PG as PostgreSQL primary
+  participant OUT as outbox-relay
+  participant BUS as Message bus
+  participant W as ingestion-worker (n)
+
+  SCH->>SRC: pull since checkpoint (connector)
+  SRC-->>SCH: file stream
+  SCH->>OBJ: store raw artifact (encrypted at rest, sha256)
+  SCH->>PG: INSERT raw_artifact ON CONFLICT DO NOTHING
+  alt already received (same hash, source, business date)
+    SCH->>SCH: skip unless explicit replay
+  else new artifact
+    SCH->>PG: tx: ingestion_run + plan + outbox(decrypt task)
+    OUT->>BUS: publish decrypt task
+    BUS->>W: decrypt task
+    W->>PG: claim (UPDATE ... RETURNING claim_token)
+    W->>OBJ: stream PGP → sequential decrypt + decompress → plaintext object
+    W->>PG: tx: chunks planned by byte range + outbox(chunk-ready xN) + complete claim
+    OUT->>BUS: publish chunk-ready events
+    par many workers
+      BUS->>W: chunk(run, range, config version)
+      W->>PG: claim chunk (owner = run + token)
+      W->>OBJ: read byte range
+      W->>W: sniff, parse, map (nested paths), validate (CEL)
+      W->>PG: COPY into UNLOGGED run staging
+      W->>PG: tx: merge → canonical + match keys, rejects, counts, complete claim, outbox
+      W-->>PG: heartbeat while working
+    end
+    SCH->>PG: all chunks complete and counts balance?
+    SCH->>PG: tx: finalize run, record commit LSN, ANALYZE touched partitions, outbox(run-completed)
+  end

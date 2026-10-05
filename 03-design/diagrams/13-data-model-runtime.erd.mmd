@@ -1,0 +1,130 @@
+%% Runtime model (partitioned per reconark-partitioning.yaml; partition key in every PK/UK/FK)
+erDiagram
+  RAW_ARTIFACT ||--o{ INGESTION_RUN : "processed by"
+  INGESTION_RUN ||--o{ WORK_CHUNK : "split into"
+  INGESTION_RUN ||--o{ CANONICAL_RECORD : "writes"
+  INGESTION_RUN ||--o{ REJECT_RECORD : "rejects"
+  WORK_CHUNK ||--o{ REJECT_RECORD : "rejects"
+  CANONICAL_RECORD ||--o{ CANONICAL_MATCH_KEY : "keys"
+  RECON_RUN ||--o{ RECON_GROUP : "decides"
+  RECON_GROUP ||--|{ RECON_GROUP_MEMBER : "pairs"
+  CANONICAL_RECORD ||--o{ RECON_GROUP_MEMBER : "member of"
+  RECON_GROUP ||--o{ RECON_FIELD_DIFF : "explains"
+  RECON_GROUP ||--o| RECON_EXCEPTION : "raises"
+  RECON_EXCEPTION ||--o{ RECON_EXCEPTION_COMMENT : "discussed"
+  RECON_RUN }o--|| RECON_DAY_SUMMARY : "summarized in"
+
+  RAW_ARTIFACT {
+    bigint id PK
+    date business_date PK
+    uuid public_id
+    bigint source_id FK
+    bytea content_sha256 "unique with source + date"
+    text storage_uri
+    text status
+  }
+  INGESTION_RUN {
+    bigint id PK
+    date business_date PK
+    uuid public_id
+    text idempotency_key "unique with business_date"
+    text status
+    bigint read_count "= accepted + rejected + quarantined"
+    bigint accepted_count
+    bigint rejected_count
+    bigint quarantined_count
+    timestamptz heartbeat_at
+  }
+  WORK_CHUNK {
+    bigint id PK
+    date business_date PK
+    bigint run_id FK
+    int seq
+    bigint range_start
+    bigint range_end
+    uuid claim_token
+    text claimed_by
+    timestamptz heartbeat_at
+    int attempt
+  }
+  CANONICAL_RECORD {
+    bigint id PK
+    date business_date PK "RANGE daily + HASH source_id"
+    bigint source_id FK
+    bigint run_id FK
+    text business_key
+    int record_version
+    timestamptz event_time
+    numeric amount "19,4"
+    char3 currency
+    text status_normalized
+    jsonb attributes
+  }
+  CANONICAL_MATCH_KEY {
+    bigint record_id PK
+    date business_date PK
+    bigint rule_set_id PK
+    int priority PK
+    bytea key_hash "indexed for candidate joins"
+  }
+  REJECT_RECORD {
+    bigint id PK
+    date business_date PK
+    bigint run_id FK
+    text stage
+    text error_code "RK-AREA-NNNN"
+    jsonb field_errors "masked values"
+  }
+  RECON_RUN {
+    bigint id PK
+    date business_date PK
+    bigint rule_set_id FK
+    text mode "STREAM BATCH RERECON"
+    text idempotency_key
+    text status
+  }
+  RECON_GROUP {
+    bigint id PK
+    date business_date PK
+    int group_version
+    boolean is_current
+    text outcome
+    uuid claim_token
+  }
+  RECON_GROUP_MEMBER {
+    bigint group_id PK
+    date business_date PK
+    text side PK "LEFT RIGHT"
+    bigint record_id PK
+    boolean is_current "one current group per record + rule set"
+  }
+  RECON_FIELD_DIFF {
+    bigint group_id PK
+    int group_version PK
+    date business_date PK
+    bigint compare_rule_id PK
+    text left_value_masked
+    text right_value_masked
+    numeric delta
+  }
+  RECON_EXCEPTION {
+    bigint id PK
+    date business_date PK
+    uuid public_id
+    text status
+    text resolved_by
+    text approved_by "must differ from resolved_by"
+  }
+  RECON_EXCEPTION_COMMENT {
+    bigint id PK
+    date business_date PK
+    bigint exception_id FK
+    text author
+    text body
+  }
+  RECON_DAY_SUMMARY {
+    bigint rule_set_id PK
+    date business_date PK
+    boolean is_final
+    numeric variance_amount
+  }

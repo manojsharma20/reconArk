@@ -1,0 +1,12 @@
+%% Provider configuration version — maker-checker
+stateDiagram-v2
+  [*] --> DRAFT : maker creates / clones
+  DRAFT --> DRAFT : edit (optimistic lock)
+  DRAFT --> PENDING_APPROVAL : validate + dry-run pass, submit (content_hash frozen)
+  PENDING_APPROVAL --> REJECTED : checker rejects (reason)
+  PENDING_APPROVAL --> APPROVED : checker ≠ maker, step-up MFA, approves exact content_hash
+  REJECTED --> [*]
+  APPROVED --> ACTIVE : effective_from reached
+  ACTIVE --> SUPERSEDED : newer version becomes ACTIVE
+  SUPERSEDED --> ACTIVE : rollback (approved)
+  SUPERSEDED --> [*]

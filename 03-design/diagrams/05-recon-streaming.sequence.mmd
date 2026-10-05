@@ -1,0 +1,19 @@
+%% Recon — streaming (real time), same rules as batch
+sequenceDiagram
+  autonumber
+  participant BUS as Message bus
+  participant R as recon-worker
+  participant RR as Read replica
+  participant PG as PostgreSQL primary
+
+  BUS->>R: record-canonicalized(rule set, match key, commit LSN)
+  R->>PG: INSERT processed_message ON CONFLICT DO NOTHING (dedupe) — same tx as the effect below
+  R->>RR: wait for replay LSN, then point lookup of counterpart(s) by key_hash
+  alt counterpart present
+    R->>PG: claim or create group (owner token)
+    R->>R: evaluate rules
+    R->>PG: tx: new group version (MATCHED / MISMATCHED / DUPLICATE ...) + diffs + outbox
+  else not yet
+    R->>PG: tx: group PENDING with matching-window deadline + outbox
+  end
+  Note over R,PG: a later arrival or correction re-opens the group as a new version (history kept)

@@ -1,0 +1,20 @@
+%% Primary for writers, replicas for every other read, read-your-writes by LSN fence
+flowchart LR
+  subgraph app[Service]
+    uc[Use case]
+    ws[WriteStore port]
+    rs[ReadStore port]
+    fence{replica replay LSN<br/>>= required LSN?}
+  end
+  pool_w[[writer pool<br/>PgBouncer]]
+  pool_r[[reader pools<br/>per replica]]
+  pg[(Primary<br/>writer role: DML)]
+  r1[(Replica 1<br/>reader role: SELECT)]
+  r2[(Replica 2 / report replica)]
+
+  uc -- "insert, COPY, merge, claim,<br/>transition, outbox" --> ws --> pool_w --> pg
+  uc -- "every pure read" --> rs --> fence
+  fence -- yes --> pool_r --> r1 & r2
+  fence -- "no: wait (bounded),<br/>then other replica / back off" --> fence
+  pg -. WAL streaming .-> r1 & r2
+  ws -. "records commit LSN" .-> uc

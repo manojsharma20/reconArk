@@ -1,0 +1,120 @@
+%% Configuration model (versioned, immutable once approved)
+erDiagram
+  PROVIDER ||--o{ PROVIDER_CONFIG_VERSION : "versions"
+  PROVIDER_CONFIG_VERSION ||--o{ SOURCE : "defines"
+  PROVIDER_CONFIG_VERSION ||--o{ RECON_RULE_SET : "defines"
+  SOURCE ||--o{ FIELD_MAPPING : "maps"
+  CANONICAL_FIELD ||--o{ FIELD_MAPPING : "target"
+  FIELD_MAPPING ||--o{ FIELD_MAPPING_VALIDATION : "applies"
+  VALIDATION_RULE ||--o{ FIELD_MAPPING_VALIDATION : "used by"
+  RECON_RULE_SET ||--o{ RECON_MATCH_KEY : "keys"
+  RECON_RULE_SET ||--o{ RECON_COMPARE_RULE : "compares"
+  SOURCE ||--o{ RECON_RULE_SET : "left side"
+  SOURCE ||--o{ RECON_RULE_SET : "right side"
+  VALUE_MAP ||--o{ VALUE_MAP_ENTRY : "entries"
+  VALUE_MAP |o--o{ RECON_COMPARE_RULE : "translates"
+  REASON_CODE ||--o{ RECON_COMPARE_RULE : "explains"
+
+  PROVIDER {
+    bigint id PK
+    uuid public_id UK
+    text code UK
+    text name
+    text status "DRAFT ACTIVE SUSPENDED RETIRED"
+    text business_timezone
+    char3 default_currency
+  }
+  PROVIDER_CONFIG_VERSION {
+    bigint id PK
+    bigint provider_id FK
+    int version_no "unique per provider"
+    text status "DRAFT .. ACTIVE SUPERSEDED REJECTED"
+    timestamptz effective_from
+    bytea content_hash
+    text submitted_by
+    text approved_by "must differ from submitted_by"
+  }
+  CANONICAL_FIELD {
+    text code PK
+    text data_type
+    boolean is_core
+    boolean is_sensitive
+  }
+  SOURCE {
+    bigint id PK
+    bigint config_version_id FK
+    text code "unique per version"
+    text side_role "INTERNAL PARTNER"
+    text connector_type "SFTP OBJECT_STORE REST SOAP GRPC MQ UPLOAD"
+    text format
+    text encryption "NONE PGP"
+    text record_root_path
+    text secret_ref "name only, never a value"
+    jsonb connection_settings "non-secret, schema-validated"
+  }
+  FIELD_MAPPING {
+    bigint id PK
+    bigint source_id FK
+    text target_field FK
+    text source_path "compiled at save"
+    text data_type
+    boolean required
+    text transform_expression "CEL, sandboxed"
+    text cardinality "EXACTLY_ONE FIRST JOIN SUM"
+    boolean is_sensitive
+  }
+  VALIDATION_RULE {
+    bigint id PK
+    text code UK
+    text scope "FIELD RECORD FILE"
+    text expression "CEL"
+    text failure_message_template
+  }
+  FIELD_MAPPING_VALIDATION {
+    bigint field_mapping_id PK
+    bigint validation_rule_id PK
+    int seq
+  }
+  RECON_RULE_SET {
+    bigint id PK
+    bigint config_version_id FK
+    bigint left_source_id FK
+    bigint right_source_id FK "must differ from left"
+    text cardinality "ONE_TO_ONE ONE_TO_MANY MANY_TO_ONE"
+    interval matching_window
+    interval pending_failure_after
+  }
+  RECON_MATCH_KEY {
+    bigint id PK
+    bigint rule_set_id FK
+    int priority
+    text left_field
+    text right_field
+    text_array normalizations
+  }
+  RECON_COMPARE_RULE {
+    bigint id PK
+    bigint rule_set_id FK
+    int seq
+    text comparator
+    numeric tolerance_abs
+    numeric tolerance_pct
+    interval time_window
+    bigint value_map_id FK
+    text severity "BLOCKING WARNING"
+    text reason_code FK
+  }
+  VALUE_MAP {
+    bigint id PK
+    text code UK
+  }
+  VALUE_MAP_ENTRY {
+    bigint value_map_id PK
+    text left_value PK
+    text right_value
+  }
+  REASON_CODE {
+    text code PK "RK-AREA-NNNN"
+    text category
+    text message_template
+  }
