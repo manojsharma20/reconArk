@@ -127,9 +127,15 @@ final class KafkaMessageBus implements MessageBus, AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         for (AutoCloseable s : subscriptions) {
-            s.close();
+            try {
+                s.close();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                // keep closing the remaining subscriptions
+            }
         }
         producer.close(Duration.ofSeconds(10));
     }

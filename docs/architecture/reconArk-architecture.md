@@ -7,6 +7,7 @@
 | Version | 0.1 — 2026-10-02 |
 | Companion | `../reference/reconArk-build-prompt.md` (build prompt; section numbers prefixed "P§" refer to it), diagram sources in `../diagrams/` and `../c4/`, ADR records in `../adr/` |
 | Decision rule | Decisions in section 14 are the approved defaults. Changing one requires a new ADR that supersedes it. |
+| v0.2 note | Still the reference for data, transactions, performance, messaging, security and clouds. **§5 (logical architecture) is superseded by the composable design** in [`../hld/reconArk-HLD.md`](../hld/reconArk-HLD.md) (ADR-0026 to ADR-0037). |
 
 ---
 

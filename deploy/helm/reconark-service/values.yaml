@@ -1,0 +1,32 @@
+# Defaults shared by every reconArk service. Each release overrides name, image and composition.
+enabled: true
+name: reconark-service
+image:
+  repository: ghcr.io/manojsharma20/reconark-service
+  tag: "0.2.0"
+  pullPolicy: IfNotPresent
+replicas: 3
+port: 8080
+env: {}
+# Rendered into ./config/composition/<name>.yaml inside the pod (spring.config.import in application.yaml).
+composition: {}
+resources:
+  requests: { cpu: 500m, memory: 768Mi }
+  limits: { memory: 1536Mi }
+autoscaling:
+  # KEDA ScaledObject on broker lag for workers; plain HPA on CPU for APIs.
+  mode: hpa          # hpa | keda | none
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPU: 70
+  keda:
+    topic: ""
+    consumerGroup: ""
+    lagThreshold: "500"
+serviceAccount:
+  annotations: {}     # e.g. EKS Pod Identity / Entra Workload ID / GKE Workload Identity
+networkPolicy:
+  enabled: true
+  allowFromNamespaces: [reconark]
+podDisruptionBudget:
+  minAvailable: 2

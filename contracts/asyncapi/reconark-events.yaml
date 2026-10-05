@@ -1,0 +1,101 @@
+asyncapi: 3.0.0
+info:
+  title: reconArk events
+  version: 1.0.0
+  description: |
+    Every event is published from the transactional outbox, at least once, ordered per key, wrapped in a CloudEvents
+    1.0 JSON envelope. Consumers deduplicate on `id`. Broker-neutral: the active message-bus brick decides the transport.
+defaultContentType: application/cloudevents+json
+channels:
+  artifactReceived:
+    address: reconark.ingestion.artifact-received.v1
+    messages: { artifactReceived: { $ref: '#/components/messages/ArtifactReceived' } }
+  chunkReady:
+    address: reconark.ingestion.chunk-ready.v1
+    messages: { chunkReady: { $ref: '#/components/messages/ChunkReady' } }
+  recordCanonicalized:
+    address: reconark.ingestion.record-canonicalized.v1
+    messages: { recordCanonicalized: { $ref: '#/components/messages/Envelope' } }
+  bucketReady:
+    address: reconark.recon.bucket-ready.v1
+    messages: { bucketReady: { $ref: '#/components/messages/BucketReady' } }
+  outcomeChanged:
+    address: reconark.recon.outcome-changed.v1
+    messages: { outcomeChanged: { $ref: '#/components/messages/Envelope' } }
+  exceptionRaised:
+    address: reconark.recon.exception-raised.v1
+    messages: { exceptionRaised: { $ref: '#/components/messages/Envelope' } }
+  reportRequested:
+    address: reconark.reporting.report-requested.v1
+    messages: { reportRequested: { $ref: '#/components/messages/ReportRequested' } }
+  configChanged:
+    address: reconark.platform.config-changed.v1
+    messages: { configChanged: { $ref: '#/components/messages/Envelope' } }
+operations:
+  publishArtifactReceived: { action: send, channel: { $ref: '#/channels/artifactReceived' } }
+  consumeChunkReady: { action: receive, channel: { $ref: '#/channels/chunkReady' } }
+  consumeBucketReady: { action: receive, channel: { $ref: '#/channels/bucketReady' } }
+  publishOutcomeChanged: { action: send, channel: { $ref: '#/channels/outcomeChanged' } }
+  consumeReportRequested: { action: receive, channel: { $ref: '#/channels/reportRequested' } }
+  publishConfigChanged: { action: send, channel: { $ref: '#/channels/configChanged' } }
+components:
+  schemas:
+    CloudEvent:
+      type: object
+      properties:
+        specversion: { const: '1.0' }
+        id: { type: string }
+        source: { type: string, examples: ['/reconark/etl-worker'] }
+        type: { type: string, examples: ['reconark.recon.bucket-ready.v1'] }
+        time: { type: string, format: date-time }
+        subject: { type: string }
+        traceparent: { type: string }
+        data: { type: object }
+      required: [specversion, id, source, type, time, data]
+  messages:
+    Envelope:
+      payload: { $ref: '#/components/schemas/CloudEvent' }
+    ArtifactReceived:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/CloudEvent'
+          - properties:
+              data:
+                type: object
+                properties: { artifactKey: { type: string }, sha256: { type: string }, sourceId: { type: string } }
+    ChunkReady:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/CloudEvent'
+          - properties:
+              data:
+                type: object
+                properties:
+                  runId: { type: string }
+                  chunkId: { type: string }
+                  artifactKey: { type: string }
+                  offset: { type: integer }
+                  length: { type: integer }
+                  configVersion: { type: string }
+    BucketReady:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/CloudEvent'
+          - properties:
+              data:
+                type: object
+                properties:
+                  runId: { type: string }
+                  ruleSetVersion: { type: string }
+                  businessDate: { type: string, format: date }
+                  hashFrom: { type: integer }
+                  hashTo: { type: integer }
+                  requiredLsn: { type: string }
+    ReportRequested:
+      payload:
+        allOf:
+          - $ref: '#/components/schemas/CloudEvent'
+          - properties:
+              data:
+                type: object
+                properties: { requestId: { type: string }, definition: { type: string }, format: { type: string } }

@@ -46,11 +46,7 @@ public final class KafkaBusPlugin implements ReconArkPlugin {
     @Override
     public void close() {
         if (bus != null) {
-            try {
-                bus.close();
-            } catch (Exception ignored) {
-                // shutting down
-            }
+            bus.close();
         }
     }
 }

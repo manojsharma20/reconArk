@@ -1,0 +1,6 @@
+apiVersion: v2
+name: reconark-service
+description: One chart for every reconArk service — one Helm release per service ("services are Lego too", HLD §10.3)
+type: application
+version: 0.2.0
+appVersion: "0.2.0"

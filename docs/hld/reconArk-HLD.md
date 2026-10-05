@@ -288,14 +288,9 @@ Example service composition (etl-worker, AWS production):
 reconark:
   composition:
     environment: prod
+    enabled: [core-stages, decoder-pgp, format-delimited, format-json, recon-standard, secrets-aws, storage-s3]
     plugins:
-      bus-kafka:        { config: { bootstrap: "${KAFKA_BOOTSTRAP}", acks: all } }
-      secrets-aws:      { config: { region: me-central-1, cache-ttl: PT5M } }
-      storage-s3:       { config: { bucket-ref: raw-artifacts } }
-      decoder-pgp:      {}
-      format-delimited: {}
-      format-json:      {}
-      comparator-standard: {}
+      bus-kafka:        { config: { bootstrap-servers: "${KAFKA_BOOTSTRAP}", security-protocol: SSL } }
       remote-iso20022:  { remote: { endpoint: "dns:///plugin-iso20022:9443", timeout: PT2S, max-batch: 500 } }
     bindings:
       message-bus: kafka
@@ -305,7 +300,8 @@ reconark:
 ```
 
 Swapping the broker means changing `bus-kafka` to `bus-rabbitmq` and `message-bus: kafka` to
-`message-bus: rabbitmq`, then redeploying. Nothing else changes.
+`message-bus: rabbitmq`, then redeploying. Nothing else changes. See
+[`config/composition/`](../../config/composition/) for complete examples.
 
 ## 9. Configuration-driven pipelines
 
@@ -469,7 +465,7 @@ sequenceDiagram
     K->>P: register(registrar, context)
     P->>R: contribute(extensionPoint, key, instance)
   end
-  K->>R: apply bindings (SINGLE exactly one; CHAIN order) + interceptors
+  K->>R: apply bindings (SINGLE exactly one, CHAIN order) and interceptors
   R-->>SB: ready (or RK-KRN-* failure → service refuses to start)
   SB->>SB: expose beans, /actuator/plugins, health
 ```

@@ -3,9 +3,9 @@ package io.reconark.platform.api;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -22,10 +22,13 @@ import org.springframework.security.web.SecurityFilterChain;
  * Every business API is a stateless OAuth2 resource server. Roles come from the {@code roles} claim
  * ({@code ONBOARDING_MAKER}, {@code RECON_ANALYST}, ...; architecture §10.1). In {@code dev-mode} (local only, refused
  * when the composition environment is prod) every request is authenticated as a local developer with all roles.
+ *
+ * <p>Imported through {@link EnableReconArkApi} as user configuration, so it is registered before Spring Boot's
+ * default security auto-configuration (which then backs off).
  */
-@AutoConfiguration
+@Configuration(proxyBeanMethods = false)
 @EnableMethodSecurity
-public class ApiSecurityAutoConfiguration {
+public class ApiSecurityConfiguration {
 
     static final List<String> ALL_ROLES = List.of(
             "ONBOARDING_MAKER", "ONBOARDING_CHECKER", "RECON_ANALYST", "RECON_SUPERVISOR", "REPORT_VIEWER",

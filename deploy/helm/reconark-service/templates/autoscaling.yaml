@@ -1,0 +1,28 @@
+{{- if and .Values.enabled (eq .Values.autoscaling.mode "hpa") }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.name }}
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: {{ .Values.name }} }
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: {{ .Values.autoscaling.targetCPU }} } }
+{{- else if and .Values.enabled (eq .Values.autoscaling.mode "keda") }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Values.name }}
+spec:
+  scaleTargetRef: { name: {{ .Values.name }} }
+  minReplicaCount: {{ .Values.autoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
+  triggers:
+    - type: kafka
+      metadata:
+        topic: {{ .Values.autoscaling.keda.topic | quote }}
+        consumerGroup: {{ .Values.autoscaling.keda.consumerGroup | quote }}
+        lagThreshold: {{ .Values.autoscaling.keda.lagThreshold | quote }}
+{{- end }}

@@ -1,0 +1,5 @@
+# Legacy identifiers that must never appear in reconArk code, config or contracts (ADR-0025, build prompt §2.4).
+# One term per line; '#' starts a comment. Fill in from the legacy platform's packages, tables, topics and codes.
+# Example placeholders (replace with the real legacy names during discovery):
+# LegacyLoyaltyRecon
+# loyalty_recon_txn

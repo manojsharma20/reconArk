@@ -1,0 +1,19 @@
+# helm upgrade --install etl-worker deploy/helm/reconark-service -f deploy/helm/environments/prod-aws/etl-worker.yaml
+name: etl-worker
+image: { repository: ghcr.io/manojsharma20/reconark-etl-worker, tag: "0.2.0" }
+port: 8092
+autoscaling:
+  mode: keda
+  minReplicas: 3
+  maxReplicas: 60
+  keda: { topic: reconark.ingestion.chunk-ready.v1, consumerGroup: etl-worker, lagThreshold: "200" }
+serviceAccount:
+  annotations: {}   # EKS Pod Identity association is created by Terraform
+composition:
+  reconark:
+    composition:
+      environment: prod
+      enabled: [core-stages, format-delimited, bus-kafka]
+      plugins:
+        bus-kafka: { config: { bootstrap-servers: "b-1.msk.internal:9094,b-2.msk.internal:9094", security-protocol: SSL } }
+      bindings: { message-bus: kafka }

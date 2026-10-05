@@ -1,0 +1,11 @@
+# Any service, on a laptop, with no infrastructure at all (DEV_ONLY bricks are refused when environment is prod).
+reconark:
+  security:
+    dev-mode: true
+  composition:
+    environment: local
+    enabled: [core-stages, format-delimited, recon-standard, report-csv, bus-inmemory, secrets-env, storage-filesystem]
+    plugins:
+      storage-filesystem:
+        config:
+          root: ./build/object-store

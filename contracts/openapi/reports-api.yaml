@@ -1,0 +1,44 @@
+openapi: 3.1.0
+info:
+  title: reconArk reports-api
+  version: 1.0.0
+servers:
+  - url: /api/reports/v1
+security:
+  - bearer: []
+paths:
+  /formats:
+    get:
+      summary: Output formats available in this environment (active report-renderer keys)
+      operationId: listFormats
+      responses:
+        '200': { description: Formats, content: { application/json: { schema: { type: array, items: { type: string } } } } }
+  /requests:
+    post:
+      summary: Request an asynchronous report
+      operationId: requestReport
+      parameters:
+        - $ref: 'common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                definition: { type: string, pattern: '^[a-z0-9-]{1,64}$' }
+                format: { type: string }
+              required: [definition, format]
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { requestId: { type: string, format: uuid }, status: { type: string, enum: [QUEUED] } }
+        '422': { $ref: 'common.yaml#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }

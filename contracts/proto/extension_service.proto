@@ -1,0 +1,77 @@
+// Out-of-process plugin contract (ADR-0026). A remote brick implements this service; the kernel wraps it in a proxy
+// that implements the same Java SPI, so engines cannot tell a remote brick from an in-process one.
+syntax = "proto3";
+
+package reconark.extension.v1;
+
+option java_multiple_files = true;
+option java_package = "io.reconark.extension.v1";
+
+service ExtensionService {
+  // Static description; called once at boot. Must match the composition entry (id, kernel API range).
+  rpc Describe(DescribeRequest) returns (PluginDescriptor);
+  // Validated configuration from the composition; called once at boot.
+  rpc Configure(ConfigureRequest) returns (ConfigureResponse);
+  // Batched invocation of one extension (records in, records out). Deadline per call; idempotent.
+  rpc Invoke(InvokeRequest) returns (InvokeResponse);
+  // Streaming variant for large batches.
+  rpc InvokeStream(stream InvokeRequest) returns (stream InvokeResponse);
+  // Feeds readiness.
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message DescribeRequest {}
+
+message Contribution {
+  string extension_point = 1;  // e.g. "format-reader", "field-comparator", "pipeline-stage"
+  string key = 2;              // e.g. "iso20022"
+  string options_schema = 3;   // JSON Schema of per-use options
+}
+
+message PluginDescriptor {
+  string id = 1;
+  string version = 2;
+  string kernel_api = 3;       // e.g. "[1.0,2.0)"
+  string name = 4;
+  string description = 5;
+  repeated Contribution contributions = 6;
+  string config_schema = 7;
+  bool needs_sensitive_fields = 8;  // default false: the kernel sends masked values only
+}
+
+message ConfigureRequest { string config_json = 1; string environment = 2; }
+message ConfigureResponse { bool ok = 1; repeated string problems = 2; }
+
+message Record {
+  int64 position = 1;
+  map<string, string> fields = 2;
+}
+
+message Violation { string code = 1; string field = 2; string message = 3; }
+
+message RecordResult {
+  int64 position = 1;
+  map<string, string> fields = 2;
+  repeated Violation violations = 3;
+}
+
+message InvokeRequest {
+  string extension_point = 1;
+  string key = 2;
+  string run_id = 3;
+  string options_json = 4;
+  repeated Record records = 5;  // at most max-batch records
+  bytes payload = 6;            // for byte-level extensions (decoders, format readers)
+}
+
+message InvokeResponse {
+  repeated RecordResult results = 1;
+  bytes payload = 2;
+}
+
+message HealthRequest {}
+message HealthResponse {
+  enum State { UP = 0; DEGRADED = 1; DOWN = 2; }
+  State state = 1;
+  string detail = 2;
+}

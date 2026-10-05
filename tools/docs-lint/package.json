@@ -1,0 +1,13 @@
+{
+  "name": "reconark-docs-lint",
+  "private": true,
+  "type": "module",
+  "description": "Parses every Mermaid diagram (.mmd files and ```mermaid blocks in Markdown) so broken diagrams fail CI.",
+  "scripts": {
+    "lint": "node validate-mermaid.mjs ../../docs ../../README.md ../../CLAUDE.md"
+  },
+  "dependencies": {
+    "jsdom": "^29.1.1",
+    "mermaid": "^12.1.0"
+  }
+}

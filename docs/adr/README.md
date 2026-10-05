@@ -1,6 +1,8 @@
 # Architecture decision records
 
 MADR-style. Accepted records are immutable; a change is a new record that supersedes the old one.
+ADR-0001 to ADR-0025 are the v0.1 baseline. ADR-0026 to ADR-0037 add the v0.2 composable ("Lego") architecture; they
+extend the baseline and supersede none of it.
 
 | ADR | Title | Status |
 |---|---|---|
@@ -29,3 +31,16 @@ MADR-style. Accepted records are immutable; a change is a new record that supers
 | [0023](ADR-0023-valkey-redis-never-a-system-of-record.md) | Valkey/Redis never a system of record | Accepted (baseline) |
 | [0024](ADR-0024-shard-writes-by-provider-group-when-needed.md) | Shard writes by provider group when needed | Accepted (baseline) |
 | [0025](ADR-0025-clean-room-naming-conventions.md) | Clean-room naming conventions | Accepted (baseline) |
+| [0026](ADR-0026-hybrid-plugin-kernel.md) | Hybrid plugin kernel: in-process SPI bricks plus out-of-process gRPC bricks | Proposed (v0.2) |
+| [0027](ADR-0027-extension-point-cardinality-and-bindings.md) | Extension-point cardinality and explicit bindings | Proposed (v0.2) |
+| [0028](ADR-0028-configuration-declared-pipelines.md) | Pipelines declared in configuration as stage graphs | Proposed (v0.2) |
+| [0029](ADR-0029-microservices-by-bounded-context-with-topologies.md) | Microservices by bounded context, with switchable deployment topologies | Proposed (v0.2) |
+| [0030](ADR-0030-schema-per-context-on-shared-postgresql.md) | Schema per bounded context on the shared PostgreSQL cluster | Proposed (v0.2) |
+| [0031](ADR-0031-bff-token-handler-for-the-spa.md) | Backend-for-frontend token handler for the React SPA | Proposed (v0.2) |
+| [0032](ADR-0032-react-shell-with-manifest-driven-modules.md) | React shell with manifest-driven feature modules | Proposed (v0.2) |
+| [0033](ADR-0033-openfeature-for-runtime-flags.md) | OpenFeature for runtime feature flags | Proposed (v0.2) |
+| [0034](ADR-0034-contracts-first-openapi-asyncapi-proto.md) | Contract-first: OpenAPI 3.1, AsyncAPI 3, Protobuf, schema registry | Proposed (v0.2) |
+| [0035](ADR-0035-plugin-tck-trust-tiers-and-signing.md) | Plugin TCK, trust tiers and signing | Proposed (v0.2) |
+| [0036](ADR-0036-platform-composition-in-git-business-config-in-database.md) | Platform composition in Git; business configuration in the database | Proposed (v0.2) |
+| [0037](ADR-0037-claude-code-cloud-sessions-development-workflow.md) | AI-assisted development in Claude Code cloud sessions | Proposed (v0.2) |
+

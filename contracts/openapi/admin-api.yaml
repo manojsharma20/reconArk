@@ -1,0 +1,175 @@
+openapi: 3.1.0
+info:
+  title: reconArk admin-api
+  version: 1.0.0
+  description: Onboarding and configuration. Business configuration may only reference extension keys that are active in the environment composition.
+servers:
+  - url: /api/admin/v1
+security:
+  - bearer: []
+paths:
+  /plugins:
+    get:
+      summary: Installed plugins (bricks), their state, contributions, health and configuration schema
+      operationId: listPlugins
+      responses:
+        '200':
+          description: Inventory
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/PluginInventoryEntry' } }
+        default: { $ref: 'common.yaml#/components/responses/Problem' }
+  /extension-points:
+    get:
+      summary: Every extension point (socket) and the keys currently active in it
+      operationId: listExtensionPoints
+      responses:
+        '200':
+          description: Extension points
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/ExtensionPointView' } }
+  /providers/{providerCode}/versions:
+    parameters:
+      - $ref: '#/components/parameters/ProviderCode'
+    get:
+      summary: Versions of a provider configuration
+      operationId: listProviderVersions
+      responses:
+        '200':
+          description: Versions
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/ProviderVersion' } }
+    post:
+      summary: Create a draft version (validated against the active bricks)
+      operationId: createProviderDraft
+      parameters:
+        - $ref: 'common.yaml#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DraftRequest' }
+      responses:
+        '201':
+          description: Draft created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderVersion' }
+        '422': { $ref: 'common.yaml#/components/responses/Problem' }
+  /providers/{providerCode}/versions/{version}/dry-run:
+    parameters:
+      - $ref: '#/components/parameters/ProviderCode'
+      - $ref: '#/components/parameters/Version'
+    post:
+      summary: Run the version's pipeline on a sample (results masked)
+      operationId: dryRunProviderVersion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { sample: { type: string, maxLength: 1000000 } }
+              required: [sample]
+      responses:
+        '200':
+          description: Dry-run summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DryRunResult' }
+  /providers/{providerCode}/versions/{version}/submit:
+    parameters:
+      - $ref: '#/components/parameters/ProviderCode'
+      - $ref: '#/components/parameters/Version'
+    post:
+      summary: Submit for approval (maker)
+      operationId: submitProviderVersion
+      responses:
+        '200': { description: Submitted, content: { application/json: { schema: { $ref: '#/components/schemas/ProviderVersion' } } } }
+        '409': { $ref: 'common.yaml#/components/responses/Problem' }
+  /providers/{providerCode}/versions/{version}/approve:
+    parameters:
+      - $ref: '#/components/parameters/ProviderCode'
+      - $ref: '#/components/parameters/Version'
+    post:
+      summary: Approve (checker, different from maker, step-up MFA)
+      operationId: approveProviderVersion
+      responses:
+        '200': { description: Approved, content: { application/json: { schema: { $ref: '#/components/schemas/ProviderVersion' } } } }
+        '409': { $ref: 'common.yaml#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    ProviderCode:
+      name: providerCode
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[A-Z][A-Z0-9_]{1,31}$' }
+    Version:
+      name: version
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+  schemas:
+    PluginInventoryEntry:
+      type: object
+      properties:
+        id: { type: string }
+        version: { type: string }
+        name: { type: string }
+        trustTier: { type: string, enum: [CORE, VERIFIED, DEV_ONLY, REMOTE] }
+        state: { type: string, enum: [DISCOVERED, VALIDATED, REGISTERED, ACTIVE, DISABLED, FAILED, STOPPED] }
+        contributions: { type: object, additionalProperties: { type: array, items: { type: string } } }
+        health:
+          type: object
+          properties: { state: { type: string, enum: [UP, DEGRADED, DOWN] }, detail: { type: string } }
+        remote: { type: boolean }
+        configSchema: { type: string, description: JSON Schema (draft 2020-12) of the plugin configuration }
+    ExtensionPointView:
+      type: object
+      properties:
+        id: { type: string }
+        cardinality: { type: string, enum: [SINGLE, KEYED, CHAIN] }
+        version: { type: string }
+        activeKeys: { type: array, items: { type: string } }
+    StageRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        key: { type: string, description: pipeline-stage extension key }
+        options: { type: object }
+        onError: { type: string, enum: [REJECT_RECORD, QUARANTINE_SOURCE, FAIL_RUN] }
+      required: [key]
+    DraftRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        description: { type: string, maxLength: 500 }
+        pipeline: { type: array, minItems: 1, maxItems: 50, items: { $ref: '#/components/schemas/StageRequest' } }
+      required: [pipeline]
+    ProviderVersion:
+      type: object
+      properties:
+        providerCode: { type: string }
+        version: { type: integer }
+        description: { type: string }
+        pipeline: { type: array, items: { $ref: '#/components/schemas/StageRequest' } }
+        state: { type: string, enum: [DRAFT, SUBMITTED, APPROVED, REJECTED] }
+        maker: { type: string }
+        checker: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+    DryRunResult:
+      type: object
+      properties:
+        read: { type: integer }
+        accepted: { type: integer }
+        rejected: { type: integer }
+        rejects:
+          type: array
+          items:
+            type: object
+            properties: { position: { type: integer }, violations: { type: array, items: { type: string } } }
+        preview: { type: array, items: { type: object, additionalProperties: { type: string } } }

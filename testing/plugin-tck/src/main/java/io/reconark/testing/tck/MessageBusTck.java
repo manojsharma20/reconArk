@@ -39,14 +39,17 @@ public abstract class MessageBusTck {
     void deliversWithHeadersInKeyOrder() throws Exception {
         String topic = "tck." + UUID.randomUUID();
         List<String> got = new CopyOnWriteArrayList<>();
-        try (AutoCloseable sub = bus().subscribe(topic, "g1", m -> {
+        AutoCloseable sub = bus().subscribe(topic, "g1", m -> {
             assertThat(m.headers()).containsKey("traceparent");
             got.add(new String(m.payload(), StandardCharsets.UTF_8));
-        })) {
+        });
+        try {
             for (int i = 0; i < 10; i++) {
                 bus().publish(msg(topic, "k", "m" + i));
             }
             await(() -> got.size() == 10);
+        } finally {
+            sub.close();
         }
         assertThat(got).containsExactly("m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9");
     }
@@ -55,13 +58,16 @@ public abstract class MessageBusTck {
     void redeliversAfterFailure() throws Exception {
         String topic = "tck." + UUID.randomUUID();
         AtomicInteger attempts = new AtomicInteger();
-        try (AutoCloseable sub = bus().subscribe(topic, "g1", m -> {
+        AutoCloseable sub = bus().subscribe(topic, "g1", m -> {
             if (attempts.incrementAndGet() == 1) {
                 throw new IllegalStateException("transient");
             }
-        })) {
+        });
+        try {
             bus().publish(msg(topic, "k", "x"));
             await(() -> attempts.get() >= 2);
+        } finally {
+            sub.close();
         }
         assertThat(attempts.get()).isGreaterThanOrEqualTo(2);
     }

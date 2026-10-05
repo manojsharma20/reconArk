@@ -1,0 +1,46 @@
+# Local platform services for running reconArk services against real infrastructure.
+# Start:  docker compose -f deploy/local/docker-compose.yml up -d
+# Then run services with RECONARK_DEV_MODE=true (or SPRING_PROFILES_ACTIVE=keycloak for real OIDC).
+name: reconark
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: reconark
+      POSTGRES_USER: reconark
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only-change-me}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql]
+  kafka:
+    image: apache/kafka:4.1.0
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports: ["9092:9092"]
+  valkey:
+    image: valkey/valkey:8
+    ports: ["6379:6379"]
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: reconark
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-local-only-change-me}
+    ports: ["9000:9000", "9001:9001"]
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_PASSWORD:-local-only-change-me}
+    ports: ["8180:8080"]
+  otel-lgtm:
+    image: grafana/otel-lgtm:latest
+    ports: ["3000:3000", "4317:4317", "4318:4318"]
+volumes:
+  pgdata: {}

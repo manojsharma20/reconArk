@@ -1,0 +1,49 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels: {{- include "reconark.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels: { app.kubernetes.io/name: {{ .Values.name }} }
+  template:
+    metadata:
+      labels: {{- include "reconark.labels" . | nindent 8 }}
+      annotations:
+        checksum/composition: {{ toYaml .Values.composition | sha256sum }}
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [{ containerPort: {{ .Values.port }}, name: http }]
+          env:
+            - { name: PORT, value: {{ .Values.port | quote }} }
+            {{- range $k, $v := .Values.env }}
+            - { name: {{ $k }}, value: {{ $v | quote }} }
+            {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          readinessProbe:
+            httpGet: { path: /actuator/health/readiness, port: http }
+          livenessProbe:
+            httpGet: { path: /actuator/health/liveness, port: http }
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - { name: composition, mountPath: /workspace/config/composition, readOnly: true }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: composition
+          configMap: { name: {{ .Values.name }}-composition }
+        - name: tmp
+          emptyDir: {}
+{{- end }}

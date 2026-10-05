@@ -1,0 +1,45 @@
+# Business configuration (layer 2) for one provider version, as stored by admin-api. No code is needed to onboard it.
+provider:
+  code: ACQUIRER_A
+  name: Acquirer A settlement files
+  version: 7
+  effective-from: 2026-11-01
+  connector:                         # source-connector brick
+    key: sftp
+    options:
+      host: sftp.acquirer-a.example
+      host-key-fingerprint-ref: prod/reconark/acquirer-a/sftp-host-key
+      credentials-ref: prod/reconark/acquirer-a/sftp-key
+      path-pattern: /outbound/settlement_*.csv.pgp
+      schedule: "0 30 2 * * *"
+  pipeline:                          # pipeline-stage bricks, in order
+    - key: decode
+      options: { decoders: [pgp, gzip], private-key-ref: prod/reconark/acquirer-a/pgp-private-key }
+      onError: QUARANTINE_SOURCE
+    - key: parse
+      options: { format: delimited, format-options: { delimiter: "|", header: true } }
+    - key: map
+      options:
+        fields:
+          partnerRef: { source: RRN, required: true }
+          amount:     { source: SETTLED_AMT, type: decimal, required: true }
+          currency:   { source: CCY, default: AED }
+          txDate:     { source: TXN_DATE, type: date, pattern: yyyyMMdd, required: true }
+          status:     { source: RESP_CODE }
+          cardLast4:  { source: PAN, sensitive: true }
+    - key: validate
+      options:
+        rules:
+          - { validator: required, options: { fields: [partnerRef, amount, txDate] } }
+    - key: canonicalize
+      options: { record-key-field: partnerRef, business-date-field: txDate }
+recon-rule-set:
+  id: RS-CORE-ACQ-A
+  leftSource: PAYMENTS_CORE
+  rightSource: ACQUIRER_A
+  matchKey: { leftFields: [rrn], rightFields: [partnerRef], normalizations: [TRIM, UPPER_CASE, STRIP_LEADING_ZEROS] }
+  strategy: one-to-one
+  compareRules:
+    - { leftField: amount, rightField: amount, comparator: numeric-tolerance, parameters: { scale: 2, absolute: "0.01" }, severity: BLOCKING }
+    - { leftField: status, rightField: status, comparator: value-map, parameters: { mapping: { "00": SUCCESS, "05": DECLINED } }, severity: BLOCKING }
+    - { leftField: txDate, rightField: txDate, comparator: date-window, parameters: { timezone: Asia/Dubai }, severity: WARNING }

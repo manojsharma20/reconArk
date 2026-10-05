@@ -1,0 +1,8 @@
+# Architecture-sensitive paths need an architecture owner's review.
+*                         @manojsharma20
+/kernel/                  @manojsharma20
+/domain/spi/              @manojsharma20
+/docs/adr/                @manojsharma20
+/.claude/                 @manojsharma20
+/CLAUDE.md                @manojsharma20
+/.github/                 @manojsharma20

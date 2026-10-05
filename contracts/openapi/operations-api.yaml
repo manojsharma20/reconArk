@@ -1,0 +1,30 @@
+openapi: 3.1.0
+info:
+  title: reconArk operations-api (internal listener only)
+  version: 1.0.0
+servers:
+  - url: /api/ops/v1
+security:
+  - bearer: []
+paths:
+  /plugins:
+    get:
+      summary: Plugin inventory of this service
+      operationId: opsPlugins
+      responses:
+        '200': { description: Inventory, content: { application/json: { schema: { type: array, items: { type: object } } } } }
+  /kernel/health:
+    get:
+      summary: Aggregated plugin health
+      operationId: kernelHealth
+      responses:
+        '200':
+          description: Health
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { state: { type: string, enum: [UP, DEGRADED, DOWN] }, detail: { type: string } }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }

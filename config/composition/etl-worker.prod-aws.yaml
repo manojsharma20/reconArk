@@ -1,0 +1,28 @@
+# etl-worker on AWS production. Mounted by Helm as ./config/composition/etl-worker.yaml.
+reconark:
+  composition:
+    environment: prod
+    enabled:
+      - core-stages
+      - format-delimited
+      - format-json          # planned
+      - decoder-pgp          # planned
+      - secrets-aws          # planned
+      - storage-s3           # planned
+    plugins:
+      bus-kafka:
+        config:
+          bootstrap-servers: ${KAFKA_BOOTSTRAP}
+          security-protocol: SSL
+          max-deliveries: 5
+      remote-iso20022:       # planned: out-of-process brick behind contracts/proto/extension_service.proto
+        remote:
+          endpoint: dns:///plugin-iso20022.reconark-plugins.svc:9443
+          timeout: PT2S
+          max-batch: 500
+    bindings:
+      message-bus: kafka
+      secret-provider: aws
+      object-store: s3
+    disabled:
+      - format-excel

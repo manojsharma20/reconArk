@@ -1,0 +1,7 @@
+title = "reconArk gitleaks config"
+[extend]
+useDefault = true
+[allowlist]
+description = "Documentation placeholders and local-only defaults"
+paths = ['''docs/reference/''', '''deploy/local/docker-compose.yml''']
+regexes = ['''local-only-change-me''']

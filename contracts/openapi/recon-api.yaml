@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: reconArk recon-api
+  version: 1.0.0
+servers:
+  - url: /api/recon/v1
+security:
+  - bearer: []
+paths:
+  /preview:
+    post:
+      summary: Evaluate a draft rule set on sample records with the production engine
+      operationId: previewRuleSet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PreviewRequest' }
+      responses:
+        '200':
+          description: Outcomes
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/ReconOutcome' } }
+        '422': { $ref: 'common.yaml#/components/responses/Problem' }
+  /comparators:
+    get:
+      summary: Active field comparators and their parameter schemas
+      operationId: listComparators
+      responses:
+        '200':
+          description: Comparators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties: { key: { type: string }, parameterSchema: { type: string } }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    CanonicalRecord:
+      type: object
+      properties:
+        sourceId: { type: string }
+        recordKey: { type: string }
+        businessDate: { type: string, format: date }
+        fields: { type: object }
+      required: [sourceId, recordKey, businessDate]
+    CompareRule:
+      type: object
+      properties:
+        leftField: { type: string }
+        rightField: { type: string }
+        comparator: { type: string, description: field-comparator key }
+        parameters: { type: object }
+        severity: { type: string, enum: [BLOCKING, WARNING] }
+        sensitive: { type: boolean }
+      required: [leftField, rightField, comparator]
+    RuleSet:
+      type: object
+      properties:
+        id: { type: string }
+        leftSource: { type: string }
+        rightSource: { type: string }
+        matchKey:
+          type: object
+          properties:
+            leftFields: { type: array, items: { type: string } }
+            rightFields: { type: array, items: { type: string } }
+            normalizations: { type: array, items: { type: string, enum: [TRIM, UPPER_CASE, STRIP_LEADING_ZEROS, REMOVE_SEPARATORS] } }
+        strategy: { type: string, default: one-to-one, description: match-strategy key }
+        strategyOptions: { type: object }
+        compareRules: { type: array, items: { $ref: '#/components/schemas/CompareRule' } }
+      required: [id, matchKey, compareRules]
+    PreviewRequest:
+      type: object
+      properties:
+        ruleSet: { $ref: '#/components/schemas/RuleSet' }
+        left: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/CanonicalRecord' } }
+        right: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/CanonicalRecord' } }
+      required: [ruleSet, left, right]
+    ReconOutcome:
+      type: object
+      properties:
+        matchKey: { type: string }
+        status: { type: string, enum: [MATCHED, MATCHED_WITH_WARNINGS, MISMATCHED, UNMATCHED_LEFT, UNMATCHED_RIGHT, DUPLICATE, PENDING] }
+        leftKeys: { type: array, items: { type: string } }
+        rightKeys: { type: array, items: { type: string } }
+        diffs:
+          type: array
+          items:
+            type: object
+            properties:
+              leftField: { type: string }
+              rightField: { type: string }
+              comparator: { type: string }
+              severity: { type: string }
+              explanation: { type: string }

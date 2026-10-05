@@ -1,0 +1,3 @@
+# Example: an entity that does not need reporting switches the bricks off (and the UI manifest hides the module).
+name: report-worker
+enabled: false

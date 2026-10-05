@@ -27,3 +27,4 @@ coverage/
 config/local-secrets/
 # Claude Code local overrides
 .claude/settings.local.json
+tools/docs-lint/node_modules/

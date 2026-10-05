@@ -1,0 +1,9 @@
+# The same etl-worker on Azure with RabbitMQ: only the bricks and bindings change — not one line of code.
+reconark:
+  composition:
+    environment: prod
+    enabled: [core-stages, format-delimited, decoder-pgp, secrets-azure, storage-blob, bus-rabbitmq]   # azure/rabbitmq bricks: planned
+    bindings:
+      message-bus: rabbitmq
+      secret-provider: azure
+      object-store: blob

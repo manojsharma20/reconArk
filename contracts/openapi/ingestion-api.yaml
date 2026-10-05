@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info:
+  title: reconArk ingestion-api
+  version: 1.0.0
+  description: Partner push. Requires mTLS at the gateway plus an HMAC/JWS signature over body, timestamp and nonce.
+servers:
+  - url: /api/ingestion/v1
+security:
+  - bearer: []
+paths:
+  /sources/{sourceId}/batches:
+    post:
+      summary: Push a batch; stored as an immutable raw artifact, then processed asynchronously
+      operationId: pushBatch
+      parameters:
+        - name: sourceId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[A-Z][A-Z0-9_]{1,31}$' }
+        - $ref: 'common.yaml#/components/parameters/IdempotencyKey'
+        - { name: X-Signature, in: header, required: true, schema: { type: string } }
+        - { name: X-Timestamp, in: header, required: true, schema: { type: string, format: date-time } }
+        - { name: X-Nonce, in: header, required: true, schema: { type: string, maxLength: 64 } }
+      requestBody:
+        required: true
+        content:
+          text/csv: { schema: { type: string, maxLength: 52428800 } }
+          application/json: { schema: { type: object } }
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { artifactKey: { type: string }, sha256: { type: string }, status: { type: string } }
+        '400': { $ref: 'common.yaml#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
