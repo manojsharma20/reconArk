@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.server.ResponseStatusException;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(properties = {
         "spring.flyway.schemas=engine",
@@ -47,6 +48,9 @@ class ReportApiTest {
     @Autowired
     JdbcClient jdbc;
 
+    @Autowired
+    JsonMapper jsonMapper;
+
     UUID runId;
 
     @BeforeEach
@@ -70,6 +74,12 @@ class ReportApiTest {
         assertThat(summary.matched()).isEqualTo(2);
         assertThat(summary.matchRatePercent()).isEqualTo(50.0);
         assertThat(summary.fields()).containsExactly("ref", "amount");
+    }
+
+    @Test
+    void matchRateIsPartOfTheJson() {
+        String json = jsonMapper.writeValueAsString(reports.summary(runId));
+        assertThat(json).contains("\"matchRatePercent\":50.0");
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.reconark.report;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 
@@ -19,7 +20,8 @@ public record RunSummary(
         Instant createdAt,
         Instant finishedAt) {
 
-    /** Share of matched keys among all keys, 0..100 (0 when there are no results yet). */
+    /** Share of matched keys among all keys, 0..100 (0 when there are no results yet). Included in the JSON. */
+    @JsonProperty("matchRatePercent")
     public double matchRatePercent() {
         long total = matched + mismatched + onlyInLeft + onlyInRight;
         return total == 0 ? 0 : Math.round(matched * 10_000.0 / total) / 100.0;

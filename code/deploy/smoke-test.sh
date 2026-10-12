@@ -67,8 +67,10 @@ CHECK=$(python3 - "$SUMMARY" <<'PY'
 import json, sys
 s = json.loads(sys.argv[1])
 expected = {"matched": 5, "mismatched": 3, "onlyInLeft": 1, "onlyInRight": 1, "rejected": 1, "leftLoaded": 9, "rightLoaded": 9}
-wrong = {k: (s[k], v) for k, v in expected.items() if s[k] != v}
-print(f"wrong counts (actual, expected): {wrong}" if wrong else
+wrong = {k: (s.get(k), v) for k, v in expected.items() if s.get(k) != v}
+if s.get("matchRatePercent") != 50.0:
+    wrong["matchRatePercent"] = (s.get("matchRatePercent"), 50.0)
+print(f"wrong values (actual, expected): {wrong}" if wrong else
       f"counts OK: { {k: s[k] for k in expected} }, match rate {s['matchRatePercent']} %")
 PY
 )
