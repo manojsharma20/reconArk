@@ -112,7 +112,7 @@ jobs:
           docker compose -f deploy/docker-compose.yml --profile app ps
           for s in manager worker config-service ingestion-service report-service; do
             echo "::group::$s"; docker compose -f deploy/docker-compose.yml --profile app logs --tail 150 $s; echo "::endgroup::"
-            docker compose -f deploy/docker-compose.yml --profile app logs --tail 400 $s 2>&1 | grep -E "ERROR|Exception|Caused by" | head -5 | while read -r line; do echo "::error title=$s::${line:0:400}"; done
+            docker compose -f deploy/docker-compose.yml --profile app logs --tail 400 $s 2>&1 | grep -E " ERROR | WARN .*(failed|Exception)|Caused by" | head -5 | while read -r line; do echo "::error title=$s::${line:0:400}"; done
           done
 
   docs:

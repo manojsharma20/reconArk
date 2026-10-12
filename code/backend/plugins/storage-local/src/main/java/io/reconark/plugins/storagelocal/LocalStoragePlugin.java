@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 /**
- * Plugs in local-folder storage. Settings: {@code reconark.plugins.storage-local.root} (default {@code ./data/files});
+ * Plugs in local-folder storage. Settings: {@code reconark.plugins.storage-local.root} (default: {@code reconark/files} in the system temp folder);
  * switch off with {@code reconark.plugins.storage-local.enabled=false} when another storage plugin is used.
  */
 @AutoConfiguration
@@ -15,7 +15,8 @@ import org.springframework.context.annotation.Bean;
 public class LocalStoragePlugin {
 
     @Bean
-    LocalFileStore localFileStore(@Value("${reconark.plugins.storage-local.root:./data/files}") String root) {
+    LocalFileStore localFileStore(
+            @Value("${reconark.plugins.storage-local.root:${java.io.tmpdir}/reconark/files}") String root) {
         return new LocalFileStore(Path.of(root));
     }
 }

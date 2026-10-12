@@ -28,12 +28,20 @@ public class JobPublisher {
     }
 
     public void publish(JobMessage job) {
-        kafka.send(Topics.JOBS, job.runId().toString(), json.writeValueAsString(job))
-                .whenComplete((ok, error) -> {
-                    if (error != null) {
-                        log.warn("Could not send job {} of run {}; the watchdog will retry: {}",
-                                job.jobId(), job.runId(), error.toString());
-                    }
-                });
+        try {
+            kafka.send(Topics.JOBS, job.runId().toString(), json.writeValueAsString(job))
+                    .whenComplete((ok, error) -> {
+                        if (error != null) {
+                            warn(job, error);
+                        }
+                    });
+        } catch (RuntimeException error) { // e.g. Kafka unreachable: send() gives up after max.block.ms
+            warn(job, error);
+        }
+    }
+
+    private static void warn(JobMessage job, Throwable error) {
+        log.warn("Could not send job {} of run {}; the watchdog will send it again: {}",
+                job.jobId(), job.runId(), error.toString());
     }
 }

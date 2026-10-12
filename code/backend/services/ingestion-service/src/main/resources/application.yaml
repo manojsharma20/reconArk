@@ -27,7 +27,7 @@ spring:
 reconark:
   plugins:
     storage-local:
-      root: ${STORAGE_ROOT:./data/files}   # must be the same folder the workers read
+      root: ${STORAGE_ROOT:${java.io.tmpdir}/reconark/files}   # must be the same folder the workers read
 
 management:
   endpoints:

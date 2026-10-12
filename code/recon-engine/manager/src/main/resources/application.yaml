@@ -1,5 +1,5 @@
-# recon-engine manager. Every value can be overridden with an environment variable,
-# e.g. reconark.manager.bucket-count -> RECONARK_MANAGER_BUCKET_COUNT
+# recon-engine manager. Every value can be overridden with an environment variable (upper case, dots -> _,
+# dashes removed), e.g. reconark.manager.bucket-count -> RECONARK_MANAGER_BUCKETCOUNT
 server:
   port: ${PORT:8090}
   shutdown: graceful
@@ -24,6 +24,8 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       acks: all
+      properties:
+        max.block.ms: 10000   # don't hang a request for long when Kafka is down; the watchdog re-sends later
     consumer:
       auto-offset-reset: earliest
     listener:

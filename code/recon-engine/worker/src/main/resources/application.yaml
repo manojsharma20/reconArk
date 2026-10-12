@@ -32,7 +32,7 @@ reconark:
     concurrency: 2
   plugins:
     storage-local:
-      root: ${STORAGE_ROOT:./data/files}
+      root: ${STORAGE_ROOT:${java.io.tmpdir}/reconark/files}   # must be the same folder ingestion-service writes
 
 management:
   endpoints:
