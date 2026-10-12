@@ -1,0 +1,6 @@
+apiVersion: v2
+name: reconark-service
+description: One chart for every reconArk service. Install it once per service with that service's values file.
+type: application
+version: 0.3.0
+appVersion: "0.3.0"

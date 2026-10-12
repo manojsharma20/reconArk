@@ -1,0 +1,61 @@
+# recon-engine manager. Every value can be overridden with an environment variable (upper case, dots -> _,
+# dashes removed), e.g. reconark.manager.bucket-count -> RECONARK_MANAGER_BUCKETCOUNT
+server:
+  port: ${PORT:8090}
+  shutdown: graceful
+
+spring:
+  application:
+    name: recon-manager
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reconark}
+    username: ${DB_USER:reconark}
+    password: ${DB_PASSWORD:reconark}
+  flyway:
+    schemas: engine
+    locations: classpath:db/migration/engine
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      properties:
+        max.block.ms: 10000   # don't hang a request for long when Kafka is down; the watchdog re-sends later
+    consumer:
+      auto-offset-reset: earliest
+      properties:
+        allow.auto.create.topics: false   # topics are declared by the services, with the right partitions
+        metadata.max.age.ms: 30000        # notice new partitions quickly
+    listener:
+      concurrency: 3
+
+reconark:
+  manager:
+    bucket-count: 16
+    max-attempts: 3
+    job-timeout: 10m
+    keep-staging-records: false
+    config-service-url: ${CONFIG_SERVICE_URL:http://localhost:8081}
+    ingestion-service-url: ${INGESTION_SERVICE_URL:http://localhost:8082}
+
+  kafka:
+    partitions: 12   # used when the topics are created; >= workers x concurrency
+    replicas: 1      # 3 in production
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

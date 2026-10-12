@@ -13,8 +13,8 @@ if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
     echo "export PATH=$J25/bin:\$PATH" >> "$CLAUDE_ENV_FILE"
   fi
   # Frontend dependencies, only when missing (fast on resume)
-  if [ -f frontend/package-lock.json ] && [ ! -d frontend/node_modules ]; then
-    (cd frontend && npm ci --no-audit --no-fund >/dev/null 2>&1) || echo "WARN: npm ci failed in frontend/ — check network access (registry.npmjs.org)."
+  if [ -f code/frontend/package-lock.json ] && [ ! -d code/frontend/node_modules ]; then
+    (cd code/frontend && npm ci --no-audit --no-fund >/dev/null 2>&1) || echo "WARN: npm ci failed in code/frontend — check network access (registry.npmjs.org)."
   fi
 fi
 
@@ -23,5 +23,5 @@ echo "reconArk session — branch: ${branch:-unknown}"
 if [ "$branch" = "main" ] || [ "$branch" = "master" ]; then
   echo "You are on $branch. Create a branch before changing anything: git switch -c claude/<short-name>"
 fi
-echo "Rules: CLAUDE.md §1 (Lego rules). Design: docs/solution, docs/hld, docs/lld. Fast check: ./gradlew verifyQuick; frontend: npm run typecheck && npm test."
+echo "Read CLAUDE.md (rules §2). Docs: docs/README.md. Fast check: cd code && ./gradlew quickCheck; frontend: cd code/frontend && npm run typecheck && npm test."
 exit 0

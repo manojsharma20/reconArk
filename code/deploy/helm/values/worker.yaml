@@ -1,0 +1,18 @@
+# helm upgrade --install worker deploy/helm/reconark-service -f deploy/helm/values/worker.yaml
+name: worker
+image: { repository: ghcr.io/manojsharma20/reconark-worker, tag: "0.3.0" }
+port: 8091
+env:
+  STORAGE_ROOT: /data/files
+  DB_URL: jdbc:postgresql://reconark-db:5432/reconark
+  DB_USER: reconark
+  KAFKA_BOOTSTRAP_SERVERS: reconark-kafka:9092
+secretEnv:
+  DB_PASSWORD: { secret: reconark-db, key: password }
+# Workers do the heavy lifting: more replicas = more jobs in parallel (up to the Kafka topic's partitions).
+replicas: 3
+resources:
+  requests: { cpu: "1", memory: 2Gi }
+  limits: { memory: 4Gi }
+autoscaling: { enabled: true, minReplicas: 3, maxReplicas: 12, targetCPU: 70 }
+sharedFiles: { enabled: true }

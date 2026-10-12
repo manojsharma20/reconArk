@@ -1,0 +1,21 @@
+{
+  "name": "Bank statement vs General ledger",
+  "left": {
+    "name": "Bank statement",
+    "format": "csv",
+    "formatOptions": { "delimiter": "," },
+    "fieldMapping": { "reference": "REF", "valueDate": "VALUE_DATE", "amount": "AMT", "currency": "CCY" }
+  },
+  "right": {
+    "name": "General ledger",
+    "format": "fixed-width",
+    "formatOptions": { "columns": "reference:1:12,valueDate:13:8,amount:21:12,currency:33:3", "skipLines": "1" },
+    "fieldMapping": {}
+  },
+  "matchFields": ["reference"],
+  "compareRules": [
+    { "field": "amount", "comparator": "number", "options": { "tolerance": "0.01" } },
+    { "field": "valueDate", "comparator": "date", "options": { "leftFormat": "yyyy-MM-dd", "rightFormat": "yyyyMMdd", "toleranceDays": "1" } },
+    { "field": "currency", "comparator": "exact", "options": {} }
+  ]
+}

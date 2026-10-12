@@ -21,7 +21,6 @@
       "Bash(git fetch *)",
       "Bash(git stash *)",
       "Bash(java -version)",
-      "Bash(node tools/docs-lint/validate-mermaid.mjs *)",
       "WebFetch(domain:docs.spring.io)",
       "WebFetch(domain:docs.gradle.org)",
       "WebFetch(domain:www.postgresql.org)",
@@ -30,7 +29,13 @@
       "WebFetch(domain:vite.dev)",
       "WebFetch(domain:tanstack.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:code.claude.com)"
+      "WebFetch(domain:code.claude.com)",
+      "Bash(cd code && ./gradlew *)",
+      "Bash(npm run lint)",
+      "Bash(docker compose * config *)",
+      "WebFetch(domain:docs.testcontainers.org)",
+      "WebFetch(domain:grafana.com)",
+      "WebFetch(domain:prometheus.io)"
     ],
     "ask": [
       "Bash(git push *)",
@@ -41,13 +46,12 @@
       "Bash(npm uninstall *)",
       "Bash(docker *)",
       "Bash(gh *)",
-      "Edit(gradle/libs.versions.toml)",
-      "Edit(frontend/package.json)",
+      "Edit(code/gradle/libs.versions.toml)",
+      "Edit(code/frontend/package.json)",
       "Edit(.github/**)",
       "Edit(.claude/**)",
       "Edit(CLAUDE.md)",
-      "Edit(deploy/helm/environments/**)",
-      "Edit(config/composition/*prod*)"
+      "Edit(code/deploy/helm/values/**)"
     ],
     "deny": [
       "Read(./.env)",
@@ -56,10 +60,7 @@
       "Read(./**/*.key)",
       "Read(./**/*.p12)",
       "Read(./**/*.jks)",
-      "Read(./config/local-secrets/**)",
-      "Edit(docs/reference/**)",
-      "Edit(docs/README-v0.1.md)",
-      "Edit(gradle/wrapper/**)",
+      "Edit(code/gradle/wrapper/**)",
       "Bash(git push --force *)",
       "Bash(git push -f *)",
       "Bash(git reset --hard *)",
@@ -71,28 +72,59 @@
     "SessionStart": [
       {
         "matcher": "startup|resume",
-        "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh", "timeout": 600 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh",
+            "timeout": 600
+          }
+        ]
       }
     ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write|NotebookEdit",
-        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-files.py", "timeout": 10 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-files.py",
+            "timeout": 10
+          }
+        ]
       },
       {
         "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-bash.py", "timeout": 10 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/guard-bash.py",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-edit.py", "timeout": 60 }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-edit.py",
+            "timeout": 60
+          }
+        ]
       }
     ],
     "Stop": [
       {
-        "hooks": [{ "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-verify.sh", "timeout": 900, "statusMessage": "reconArk: verifying changes" }]
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-verify.sh",
+            "timeout": 900,
+            "statusMessage": "reconArk: verifying changes"
+          }
+        ]
       }
     ]
   }

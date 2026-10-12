@@ -1,0 +1,9 @@
+{
+  "environment": "local",
+  "modules": ["definitions", "files", "runs", "reports", "monitoring"],
+  "links": {
+    "grafana": "http://localhost:3000",
+    "prometheus": "http://localhost:9090",
+    "kafkaUi": "http://localhost:8085"
+  }
+}

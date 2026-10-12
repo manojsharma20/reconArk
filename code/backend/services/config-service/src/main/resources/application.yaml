@@ -1,0 +1,40 @@
+# config-service: recon definitions and the plugin catalogue.
+server:
+  port: ${PORT:8081}
+  shutdown: graceful
+
+spring:
+  application:
+    name: config-service
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reconark}
+    username: ${DB_USER:reconark}
+    password: ${DB_PASSWORD:reconark}
+  flyway:
+    schemas: config
+    locations: classpath:db/migration/config
+
+# Plugins are on by default. Switch one off like this:
+# reconark:
+#   plugins:
+#     format-fixed-width:
+#       enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

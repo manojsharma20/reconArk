@@ -1,0 +1,33 @@
+# report-service: results and downloads. Reads the engine tables (in production, point it at a read replica).
+server:
+  port: ${PORT:8083}
+  shutdown: graceful
+
+spring:
+  application:
+    name: report-service
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+    async:
+      request-timeout: 30m   # large downloads
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reconark}
+    username: ${DB_USER:reconark}
+    password: ${DB_PASSWORD:reconark}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

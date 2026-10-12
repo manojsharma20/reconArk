@@ -1,18 +1,52 @@
 # reconArk documentation
 
-Start with the **[solution document](solution/reconArk-solution-document.md)**. It explains the whole solution, with
-diagrams, and links to everything else.
+Read the documents in order. Each one starts with a short summary, so you can stop when you have what you need.
 
-| Document | What it is | Read it when |
-|---|---|---|
-| [solution/reconArk-solution-document.md](solution/reconArk-solution-document.md) | Our understanding, the Lego model, C4 summary, architecture and flow diagrams, concepts, step-by-step scenarios, tech stack with learning curve and alternatives, enhancements, roadmap | First |
-| [c4/workspace.dsl](c4/workspace.dsl) | C4 model of record (Structurizr DSL): L1, L2, L3, dynamic views, AWS deployment | You want navigable C4 views |
-| [hld/reconArk-HLD.md](hld/reconArk-HLD.md) | High-level design: drivers, Lego rules, containers, extension-point catalogue, configuration layers, pipelines, services, frontend, key flows | You review the architecture |
-| [lld/reconArk-LLD.md](lld/reconArk-LLD.md) | Low-level design: modules and dependency rules, kernel classes and boot algorithm, SPI, engines, remote bricks, services, APIs, events, data deltas, frontend, tests, CI, recipes | You build or change something |
-| [adr/](adr/README.md) | 37 architecture decision records (0001–0025 baseline, 0026–0037 composable) | You challenge or change a decision |
-| [architecture/reconArk-architecture.md](architecture/reconArk-architecture.md) | v0.1 baseline architecture: data, transactions, performance, messaging, security, clouds | Data, performance, security or cloud questions |
-| [reference/reconArk-build-prompt.md](reference/reconArk-build-prompt.md) | v0.1 build prompt: the full requirements specification | You need the original requirement |
-| [diagrams/](diagrams/) | v0.1 Mermaid diagrams (sequence, state, ERD, deployment) | You need a specific v0.1 view |
-| [README-v0.1.md](README-v0.1.md) | The original design-pack README | History |
+| # | Document | What it answers | Read it if you are |
+|---|---|---|---|
+| 1 | [Business overview](01-business-overview.md) | What does reconArk do? What do the words mean? What does a user see? | Everyone: business consultants start and often finish here |
+| 2 | [Architecture (C4 + HLD)](02-architecture.md) | Which parts exist, how do they talk, why this technology? | Developers, architects, testers, operations |
+| 3 | [Detailed design (LLD)](03-detailed-design.md) | Tables, APIs, messages, state machines, the matching algorithm | Developers, testers |
+| 4 | [Developer guide](04-developer-guide.md) | How do I run it, find my way in the code, and add a plugin, service or screen? | Developers |
+| 5 | [Testing guide](05-testing-guide.md) | What is tested automatically, and what test cases do I run by hand? | Testers, developers |
+| 6 | [Operations guide](06-operations-guide.md) | How do I deploy, configure, scale and monitor it, and what do I do when an alert fires? | Operations, developers |
+| 7 | [Roadmap and enhancements](07-roadmap.md) | What should be added before production, and after? | Sponsors, architects, product owners |
+| — | [Decisions](decisions/README.md) | Why we chose what we chose (one page per decision) | Anyone asking "why?" |
 
-Validate every Mermaid diagram with `cd tools/docs-lint && npm ci && npm run lint`.
+## The system in one picture
+
+```mermaid
+flowchart LR
+  user([Analyst]) --> ui[Web UI]
+  ui --> cfg[config-service<br/>definitions]
+  ui --> ing[ingestion-service<br/>file uploads]
+  ui --> mgr[recon manager<br/>runs]
+  ui --> rep[report-service<br/>results]
+  mgr -- jobs --> kafka[(Kafka)]
+  kafka -- jobs --> w1[worker 1] & w2[worker 2] & w3[worker N]
+  w1 & w2 & w3 -- results --> kafka
+  kafka -- results --> mgr
+  cfg & ing & mgr & w1 & w2 & w3 & rep --- db[(PostgreSQL)]
+  prom[Prometheus + Grafana] -. watches .- mgr & w1 & cfg
+```
+
+## Repository layout
+
+```
+reconArk/
+├── docs/            ← you are here: design and documentation
+└── code/            ← all source code, one Gradle build + one npm project
+    ├── backend/       common model, plugins ("Lego bricks"), business microservices
+    ├── recon-engine/  distributed engine: manager + workers
+    ├── frontend/      React web UI with switchable modules
+    └── deploy/        docker compose, Helm, Prometheus, Grafana, sample data
+```
+
+The previous, more complex design (plugin kernel, 11 services, 37 decision records) is kept on the Git branch
+`archive/v0.2` for reference. This version replaces it.
+
+## Keeping the docs right
+
+- Diagrams are [Mermaid](https://mermaid.js.org/) inside the Markdown, so GitHub draws them and they change with the
+  text. CI checks that every diagram parses (`docs/_lint`).
+- When code changes behaviour that a document describes, change the document in the same pull request.

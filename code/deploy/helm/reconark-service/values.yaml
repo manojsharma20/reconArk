@@ -1,0 +1,30 @@
+# Defaults for every reconArk service. Each file in ../values/ overrides what differs.
+name: reconark-service
+image:
+  repository: ghcr.io/manojsharma20/reconark-service
+  tag: "0.3.0"
+  pullPolicy: IfNotPresent
+replicas: 2
+port: 8080
+# Plain settings, e.g. KAFKA_BOOTSTRAP_SERVERS
+env: {}
+# Settings read from Kubernetes Secrets (passwords): ENV_NAME: { secret: name, key: key }
+secretEnv: {}
+probes:
+  enabled: true
+  liveness: /actuator/health/liveness
+  readiness: /actuator/health/readiness
+resources:
+  requests: { cpu: 250m, memory: 512Mi }
+  limits: { memory: 1Gi }
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPU: 70
+# Shared folder for uploaded files (ingestion-service writes, workers read). Needs a ReadWriteMany volume claim.
+# In the cloud you would switch to an object-storage plugin instead and leave this off.
+sharedFiles:
+  enabled: false
+  claimName: reconark-files
+  mountPath: /data/files

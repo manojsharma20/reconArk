@@ -1,21 +1,27 @@
 version: 2
 updates:
   - package-ecosystem: gradle
-    directory: /
+    directory: /code
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
     groups:
       gradle-minor-and-patch: { update-types: [minor, patch] }
   - package-ecosystem: npm
-    directory: /frontend
+    directory: /code/frontend
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
     groups:
       frontend-minor-and-patch: { update-types: [minor, patch] }
   - package-ecosystem: npm
-    directory: /tools/docs-lint
+    directory: /docs/_lint
     schedule: { interval: monthly }
     open-pull-requests-limit: 2
+  - package-ecosystem: docker
+    directory: /code/deploy/docker
+    schedule: { interval: monthly }
+  - package-ecosystem: docker-compose
+    directory: /code/deploy
+    schedule: { interval: monthly }
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }

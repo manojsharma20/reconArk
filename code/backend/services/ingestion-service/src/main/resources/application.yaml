@@ -1,0 +1,43 @@
+# ingestion-service: file uploads.
+server:
+  port: ${PORT:8082}
+  shutdown: graceful
+
+spring:
+  application:
+    name: ingestion-service
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: 2GB
+      max-request-size: 2GB
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reconark}
+    username: ${DB_USER:reconark}
+    password: ${DB_PASSWORD:reconark}
+  flyway:
+    schemas: ingestion
+    locations: classpath:db/migration/ingestion
+
+reconark:
+  plugins:
+    storage-local:
+      root: ${STORAGE_ROOT:${java.io.tmpdir}/reconark/files}   # must be the same folder the workers read
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
