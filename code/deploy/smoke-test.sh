@@ -8,7 +8,6 @@ DIR="$(cd "$(dirname "$0")/sample-data" && pwd)"
 
 fail() {
   echo "FAIL: $*" >&2
-  [ -n "${GITHUB_ACTIONS:-}" ] && echo "::error title=smoke test::$*"
   exit 1
 }
 json() { python3 -c "import json,sys; print(json.load(sys.stdin)$1)"; }

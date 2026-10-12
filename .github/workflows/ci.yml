@@ -105,7 +105,13 @@ jobs:
       - run: npm ci && npm run build
         working-directory: code/frontend
       - run: docker compose -f deploy/docker-compose.yml --profile app up -d --build --wait --wait-timeout 300
-      - run: deploy/smoke-test.sh http://localhost:8080
+      - name: Smoke test
+        run: |
+          set -o pipefail
+          deploy/smoke-test.sh http://localhost:8080 2>&1 | tee smoke.log
+      - name: Smoke test output as annotations
+        if: failure()
+        run: tail -n 12 smoke.log | while read -r line; do echo "::error title=smoke test::${line:0:900}"; done
       - name: Container logs
         if: failure()
         run: |
