@@ -282,7 +282,7 @@ Example definition (the sample in `code/deploy/sample-data/definition.json`):
 | `reconark.engine.jobs.v1` | manager → workers | run id | `recon-workers` (all workers share it: each job goes to one worker) |
 | `reconark.engine.job-results.v1` | workers → manager | run id | `recon-manager` |
 
-Both topics have 12 partitions by default (`reconark.manager.kafka.partitions`). **At most one worker per partition
+Both topics have 12 partitions by default (`reconark.kafka.partitions`; the manager and the workers both declare the topics, so whichever starts first creates them, and consumers never create topics implicitly). **At most one worker per partition
 works at a time**, so partitions ≥ total worker threads. Messages are JSON strings.
 
 `JobMessage` (LOAD):
@@ -398,7 +398,7 @@ Every property can be set as an environment variable: upper-case it, replace dot
 | `reconark.manager.max-attempts` | manager | 3 | Tries per job before the run fails |
 | `reconark.manager.job-timeout` | manager | `10m` | No answer after this → re-send |
 | `reconark.manager.keep-staging-records` | manager | false | Keep loaded records after completion (debugging) |
-| `reconark.manager.kafka.partitions` / `.replicas` | manager | 12 / 1 | Topic creation settings (replicas 3 in production) |
+| `reconark.kafka.partitions` / `.replicas` | manager, worker | 12 / 1 | Topic creation settings (replicas 3 in production) |
 | `CONFIG_SERVICE_URL`, `INGESTION_SERVICE_URL` | manager | localhost:8081 / 8082 | Where to read definitions and files |
 | `reconark.worker.concurrency` | worker | 2 | Jobs one worker runs at the same time |
 | `reconark.plugins.<plugin>.enabled` | any service carrying the plugin | true | Switch a plugin off |

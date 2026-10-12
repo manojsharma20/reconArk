@@ -113,7 +113,7 @@ file, without a new release.
 | Run time | Under 40 minutes for 100 million rows | Depends on hardware and worker count; measure with `generate.py` |
 | Formats | Any, through plugins | CSV and fixed-width included |
 | Availability | Survives a worker or manager crash without losing a run | Jobs are retried automatically |
-| Security | Bank-grade (login, roles, audit, encryption) | **Not yet**: see [Roadmap](07-roadmap.md) R1–R3. Do not use with real customer data before these are done. |
+| Security | Bank-grade (login, roles, audit, encryption) | **Not yet**: see [Roadmap](07-roadmap.md) R1–R4. Do not use with real customer data before these are done. |
 
 **Not in this version** (see the [Roadmap](07-roadmap.md)): user login and roles, maker-checker approval of
 definitions, exception workflow (assigning and closing exceptions), scheduled runs, one-to-many matching (one payment

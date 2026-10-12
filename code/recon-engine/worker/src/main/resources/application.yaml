@@ -26,10 +26,15 @@ spring:
       max-poll-records: 1
       properties:
         max.poll.interval.ms: 3600000
+        allow.auto.create.topics: false   # topics are declared by the services, with the right partitions
+        metadata.max.age.ms: 30000        # notice new partitions quickly
 
 reconark:
   worker:
     concurrency: 2
+  kafka:
+    partitions: 12   # used only if the worker starts before the manager and creates the topics
+    replicas: 1
   plugins:
     storage-local:
       root: ${STORAGE_ROOT:${java.io.tmpdir}/reconark/files}   # must be the same folder ingestion-service writes

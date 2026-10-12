@@ -28,6 +28,9 @@ spring:
         max.block.ms: 10000   # don't hang a request for long when Kafka is down; the watchdog re-sends later
     consumer:
       auto-offset-reset: earliest
+      properties:
+        allow.auto.create.topics: false   # topics are declared by the services, with the right partitions
+        metadata.max.age.ms: 30000        # notice new partitions quickly
     listener:
       concurrency: 3
 
@@ -39,9 +42,10 @@ reconark:
     keep-staging-records: false
     config-service-url: ${CONFIG_SERVICE_URL:http://localhost:8081}
     ingestion-service-url: ${INGESTION_SERVICE_URL:http://localhost:8082}
-    kafka:
-      partitions: 12
-      replicas: 1
+
+  kafka:
+    partitions: 12   # used when the topics are created; >= workers x concurrency
+    replicas: 1      # 3 in production
 
 management:
   endpoints:
