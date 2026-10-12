@@ -60,7 +60,7 @@ services:
       retries: 20
 
   kafka-ui:
-    image: kafbat/kafka-ui:v1.2.0
+    image: kafbat/kafka-ui:v1.5.0
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
