@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: gradle/actions/wrapper-validation@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
@@ -44,7 +44,7 @@ jobs:
                       text = '\n'.join(keep)[:2000].replace('%', '%25').replace('\r', '').replace('\n', '%0A')
                       print(f"::error title={case.get('classname')}.{case.get('name')}::{text}")
       - if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: 'code/**/build/reports/tests/'
@@ -58,7 +58,7 @@ jobs:
         working-directory: code/frontend
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -76,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: docker compose -f code/deploy/docker-compose.yml --profile app config --quiet
-      - uses: azure/setup-helm@v4
+      - uses: azure/setup-helm@v5
       - run: |
           for values in code/deploy/helm/values/*.yaml; do
             helm lint code/deploy/helm/reconark-service -f "$values"
@@ -91,12 +91,12 @@ jobs:
         working-directory: code
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '25'
       - uses: gradle/actions/setup-gradle@v6
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -130,7 +130,7 @@ jobs:
         working-directory: docs/_lint
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - run: npm ci
