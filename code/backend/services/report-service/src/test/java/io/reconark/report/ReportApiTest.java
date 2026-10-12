@@ -86,7 +86,9 @@ class ReportApiTest {
         var out = new ByteArrayOutputStream();
         response.getBody().writeTo(out);
         String csv = out.toString(StandardCharsets.UTF_8);
-        assertThat(csv.split("\r\n")).hasSize(5).first().isEqualTo("match_key,status,differences,left_ref,left_amount,right_ref,right_amount");
+        String[] lines = csv.split("\r\n");
+        assertThat(lines).hasSize(5);
+        assertThat(lines[0]).isEqualTo("match_key,status,differences,left_ref,left_amount,right_ref,right_amount");
         assertThat(csv).contains("T3,MISMATCHED,amount: 30 vs 35,T3,30,T3,35");
     }
 
