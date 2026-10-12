@@ -1,0 +1,10 @@
+# helm upgrade --install config-service deploy/helm/reconark-service -f deploy/helm/values/config-service.yaml
+name: config-service
+image: { repository: ghcr.io/manojsharma20/reconark-config-service, tag: "0.3.0" }
+port: 8081
+env:
+  DB_URL: jdbc:postgresql://reconark-db:5432/reconark
+  DB_USER: reconark
+  KAFKA_BOOTSTRAP_SERVERS: reconark-kafka:9092
+secretEnv:
+  DB_PASSWORD: { secret: reconark-db, key: password }

@@ -1,0 +1,30 @@
+# Alert rules. Prometheus shows them under Alerts; connect Alertmanager to send e-mail/Teams/Slack/PagerDuty.
+groups:
+  - name: reconark
+    rules:
+      - alert: ReconRunFailed
+        expr: increase(reconark_runs_finished_total{outcome="failed"}[10m]) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: A reconciliation run failed. Open the run in the UI to see which job failed and why.
+
+      - alert: NoWorkersRunning
+        expr: sum(up{job="worker"}) == 0 or absent(up{job="worker"})
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: No recon-engine worker is running, so no job can be processed.
+
+      - alert: JobsNotMoving
+        expr: max(reconark_jobs_queued) > 0 and on() sum(increase(reconark_worker_jobs_seconds_count[15m])) == 0
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: Jobs are waiting but no worker finished a job in 15 minutes. Check worker logs and Kafka consumer lag.
+
+      - alert: JobsFailing
+        expr: sum(rate(reconark_worker_jobs_seconds_count{outcome="failure"}[10m])) > 0
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: Workers keep reporting failed jobs (bad files, database or storage problems).

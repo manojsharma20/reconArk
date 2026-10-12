@@ -21,3 +21,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers-postgresql")
     testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 }
+
+// The runnable jar is always build/libs/app.jar, so Dockerfiles don't depend on the version.
+tasks.bootJar { archiveFileName = "app.jar" }
+tasks.jar { enabled = false }
