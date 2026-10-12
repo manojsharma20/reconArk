@@ -284,3 +284,7 @@ ul.plain {
 ul.plain li {
   padding: 6px 0;
 }
+
+.table-scroll td:first-child {
+  white-space: nowrap;
+}

@@ -91,6 +91,20 @@ Result: 5 matched, 3 mismatched, 1 only in left, 1 only in right, 1 rejected. Ma
 | **Reports** | Match rate and counts; results filtered by status, 50 per page, with the differences highlighted; CSV downloads. |
 | **Monitoring** | Links to the Grafana dashboard, Prometheus and Kafka UI for operations. |
 
+Screens below show the sample data.
+
+**Report** — match rate, counts, and every exception with its differences:
+
+![Report screen](images/report.png)
+
+**Definition editor** — the two sources, field mapping, match fields and compare rules:
+
+![Definition editor](images/editor.png)
+
+**Run** — live progress, counts, and the jobs the workers ran:
+
+![Run screen](images/run.png)
+
 Each screen is a separate **UI module**: an organisation that does not need one can switch it off in a configuration
 file, without a new release.
 
