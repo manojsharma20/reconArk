@@ -24,7 +24,7 @@ coverage/
 *.jks
 *.tfvars
 !*.example.tfvars
-config/local-secrets/
+# Local uploaded files (storage-local plugin)
+data/
 # Claude Code local overrides
 .claude/settings.local.json
-tools/docs-lint/node_modules/

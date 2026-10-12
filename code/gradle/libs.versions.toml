@@ -1,0 +1,7 @@
+# All third-party versions live here. Everything Spring-related (Kafka, Flyway, PostgreSQL driver, Micrometer,
+# Testcontainers, JUnit) gets its version from the Spring Boot BOM, so only Spring Boot itself is pinned.
+[versions]
+spring-boot = "4.1.1"
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

@@ -1,0 +1,55 @@
+# recon-engine manager. Every value can be overridden with an environment variable,
+# e.g. reconark.manager.bucket-count -> RECONARK_MANAGER_BUCKET_COUNT
+server:
+  port: ${PORT:8090}
+  shutdown: graceful
+
+spring:
+  application:
+    name: recon-manager
+  threads:
+    virtual:
+      enabled: true
+  mvc:
+    problemdetails:
+      enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reconark}
+    username: ${DB_USER:reconark}
+    password: ${DB_PASSWORD:reconark}
+  flyway:
+    schemas: engine
+    locations: classpath:db/migration/engine
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+    consumer:
+      auto-offset-reset: earliest
+    listener:
+      concurrency: 3
+
+reconark:
+  manager:
+    bucket-count: 16
+    max-attempts: 3
+    job-timeout: 10m
+    keep-staging-records: false
+    config-service-url: ${CONFIG_SERVICE_URL:http://localhost:8081}
+    ingestion-service-url: ${INGESTION_SERVICE_URL:http://localhost:8082}
+    kafka:
+      partitions: 12
+      replicas: 1
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

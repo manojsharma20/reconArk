@@ -1,0 +1,48 @@
+# recon-engine worker. Scale by running more copies; each copy runs `reconark.worker.concurrency` jobs at a time.
+server:
+  port: ${PORT:8091}
+  shutdown: graceful
+
+spring:
+  application:
+    name: recon-worker
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    # reWriteBatchedInserts makes the PostgreSQL driver send batches as multi-row inserts: much faster loads.
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reconark}?reWriteBatchedInserts=true
+    username: ${DB_USER:reconark}
+    password: ${DB_PASSWORD:reconark}
+    hikari:
+      maximum-pool-size: 10
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+    consumer:
+      auto-offset-reset: earliest
+      # One job at a time per consumer, and allow a long job (a big file) before Kafka assumes the worker is dead.
+      max-poll-records: 1
+      properties:
+        max.poll.interval.ms: 3600000
+
+reconark:
+  worker:
+    concurrency: 2
+  plugins:
+    storage-local:
+      root: ${STORAGE_ROOT:./data/files}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
