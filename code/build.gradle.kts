@@ -38,3 +38,17 @@ subprojects {
         }
     }
 }
+
+// Fast check without Docker (used by the Claude Code Stop hook): compile everything,
+// run the unit tests of the plain-Java modules and the plugins.
+tasks.register("quickCheck") {
+    group = "verification"
+    description = "Compiles all modules and runs the tests that don't need Docker."
+    dependsOn(subprojects.filter { it.buildFile.exists() }.map { "${it.path}:compileTestJava" })
+    dependsOn(
+        subprojects
+            .filter { it.buildFile.exists() }
+            .filter { it.path.startsWith(":backend:plugins:") || it.path in setOf(":backend:common", ":recon-engine:engine-core") }
+            .map { "${it.path}:test" },
+    )
+}

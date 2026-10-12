@@ -1,43 +1,29 @@
 ---
-description: Scaffold a new reconArk brick (plugin) for an extension point, with descriptor, ServiceLoader registration and TCK tests
-argument-hint: <plugin-id> <extension-point-id> [key]
+description: Create a new reconArk plugin (file format, comparator, report writer or storage) with tests, wired into the services that use it
+argument-hint: <kind: format|comparator|report|storage> <name, e.g. format-jsonl>
 ---
 
-Create a new reconArk plugin. Arguments: $ARGUMENTS (plugin id in kebab-case, extension point id from
-`domain/spi/src/main/java/io/reconark/spi/ExtensionPoints.java`, optional extension key, which defaults to the
-last segment of the plugin id).
+Create a plugin. Arguments: $ARGUMENTS. Follow `docs/04-developer-guide.md` §4.5 and copy the closest existing plugin
+in `code/backend/plugins/` (format → `format-csv`, comparator → `compare-standard`, report → `report-csv`,
+storage → `storage-local`).
 
-Follow LLD §15 "Add a brick" exactly:
-
-1. Read `ExtensionPoints.java` and the contract interface for the point. If the point doesn't exist, stop and
-   propose `/new-adr` instead. New sockets need an ADR.
-2. Create `plugins/<plugin-id>/build.gradle.kts` with `plugins { id("reconark.plugin") }` and a one-line
-   `description`. Add third-party dependencies only through `gradle/libs.versions.toml`, and ask first.
-3. Package `io.reconark.plugins.<area>.<name>`. Create:
-   - `package-info.java`;
-   - the implementation class (package-private, `final`);
-   - `public final class <Name>Plugin implements ReconArkPlugin` with a `PluginDescriptor`. The descriptor sets:
-     - id;
-     - version `0.1.0`;
-     - name and description;
-     - `provides(...)`;
-     - `requires(...)`, if needed;
-     - `ConfigSpec`, with secret values as `PropertySpec.secretRef` only;
-     - trust tier: `CORE`, or `DEV_ONLY` for local conveniences.
-4. Register the plugin class in `src/main/resources/META-INF/services/io.reconark.kernel.api.ReconArkPlugin`.
-5. Tests:
-   - `<Name>PluginTest extends PluginContractTck`;
-   - a `@Nested` class extending the point's TCK from `testing/plugin-tck`, if one exists. If none exists, write
-     focused tests and note the missing TCK in the PR;
-   - add focused tests for edge cases: nulls, limits, masking.
-6. Wiring:
-   - add `include(":plugins:<plugin-id>")` to `settings.gradle.kts`;
-   - add `runtimeOnly(project(":plugins:<plugin-id>"))` to the services that should carry it (ask which);
-   - add it to the relevant `config/composition/*.yaml` examples.
-7. Documentation: update HLD §7 (shipped plugins column) and, if the plugin has notable options, LLD §3/§4/§5.
-8. Run `./gradlew :plugins:<plugin-id>:test :testing:architecture-tests:test` and fix every failure. Kernel,
-   domain and plugin code compiles with `-Werror`.
-9. Summarise:
-   - the files created;
-   - the composition entry needed to activate the brick;
-   - any follow-up.
+1. Interface by kind: format → `FileFormat`, comparator → `FieldComparator`, report → `ReportWriter`,
+   storage → `FileStore` (all in `code/backend/common/.../plugin`). If none fits, stop: a new plugin kind needs a
+   decision record (`/new-adr`) first.
+2. Module `code/backend/plugins/<name>/build.gradle.kts`: `description`, `api(project(":backend:common"))`,
+   `implementation("org.springframework.boot:spring-boot-autoconfigure")`. Third-party libraries: ask first; versions
+   come from the Spring Boot BOM where possible. Add `include(":backend:plugins:<name>")` to `code/settings.gradle.kts`.
+3. Package `io.reconark.plugins.<shortname>`:
+   - the implementation class with a short, unique, lower-case `id()` and a one-sentence `description()` that lists
+     its options;
+   - `<Name>Plugin` with `@AutoConfiguration` and
+     `@ConditionalOnProperty(name = "reconark.plugins.<name>.enabled", havingValue = "true", matchIfMissing = true)`;
+   - `src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
+   Formats and writers must stream (never load a whole file into memory). Error messages name lines/fields, never values.
+4. Unit tests: normal cases, every option, edge cases (empty, null, malformed input → clear message).
+5. Wire it into the services' `build.gradle.kts`:
+   format/comparator → `worker` and `config-service`; report → `report-service`; storage → `ingestion-service` and
+   `worker` (and tell the user to switch `storage-local` off where the new storage replaces it).
+6. Docs: add the plugin and its options to `docs/03-detailed-design.md` §3.2 (plugin options table).
+7. Run `cd code && ./gradlew :backend:plugins:<name>:test` and the tests of the services you changed. Summarise
+   what you created and how to use it in a definition.

@@ -1,15 +1,13 @@
 ## What and why
 
-<!-- One concern per PR. Link the issue/ADR. -->
+<!-- One concern per PR. Link the issue or decision record. -->
 
-## Lego checklist
-- [ ] New behaviour is a brick (plugin/stage/module), not a branch in the core
-- [ ] Kernel and domain stay framework-free; plugins don't depend on each other
-- [ ] New/changed plugins extend `PluginContractTck` + the extension point TCK
-- [ ] Configuration declared in a `ConfigSpec`; secrets are reference names only
-- [ ] Contracts (`contracts/`) updated with the code
-- [ ] HLD/LLD/solution docs and diagrams updated; ADR added for new sockets, services or technology
-- [ ] `./gradlew build`, frontend checks and Mermaid lint pass locally
+## Checklist
+- [ ] New behaviour is a plugin, service or UI module, not an `if` in existing code
+- [ ] `common` and `engine-core` stay plain Java; plugins don't depend on each other
+- [ ] Tests added (unit; Testcontainers for SQL); `./gradlew build` and frontend checks pass
+- [ ] Docs and diagrams in `docs/` updated; decision record for new services, plugin kinds or technology
+- [ ] Simple enough for a developer with 2–3 years of experience to follow
 
 ## Security
-- [ ] Endpoints have role checks; sensitive values masked; no secrets committed
+- [ ] No secrets committed; no customer data in logs or error messages; SQL uses bind parameters

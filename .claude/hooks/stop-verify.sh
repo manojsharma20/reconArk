@@ -12,20 +12,21 @@ changed=$( (git diff --name-only "$base" 2>/dev/null; git ls-files --others --ex
 [ -z "$changed" ] && exit 0
 fail=""
 
-if echo "$changed" | grep -qE '^(kernel|domain|plugins|testing|platform|services|build-logic)/|\.gradle\.kts$|libs\.versions\.toml$'; then
-  if ! out=$(./gradlew verifyQuick -q 2>&1); then
-    fail+=$'\n== ./gradlew verifyQuick failed ==\n'"$(echo "$out" | tail -40)"
+# Java: compile everything, run the tests that don't need Docker (common, plugins, engine-core).
+if echo "$changed" | grep -qE '^code/(backend|recon-engine)/|^code/.*\.gradle\.kts$|libs\.versions\.toml$'; then
+  if ! out=$(cd code && ./gradlew quickCheck -q 2>&1); then
+    fail+=$'\n== cd code && ./gradlew quickCheck failed ==\n'"$(echo "$out" | tail -40)"
   fi
 fi
 
-if echo "$changed" | grep -q '^frontend/' && [ -d frontend/node_modules ]; then
-  if ! out=$(cd frontend && npm run -s typecheck 2>&1 && npx vitest run --reporter=dot 2>&1); then
+if echo "$changed" | grep -q '^code/frontend/' && [ -d code/frontend/node_modules ]; then
+  if ! out=$(cd code/frontend && npm run -s typecheck 2>&1 && npx vitest run --reporter=dot 2>&1); then
     fail+=$'\n== frontend typecheck/tests failed ==\n'"$(echo "$out" | tail -40)"
   fi
 fi
 
-if echo "$changed" | grep -qE '\.(md|mmd)$' && [ -d tools/docs-lint/node_modules ]; then
-  if ! out=$(node tools/docs-lint/validate-mermaid.mjs docs README.md 2>&1); then
+if echo "$changed" | grep -qE '\.md$' && [ -d docs/_lint/node_modules ]; then
+  if ! out=$(cd docs/_lint && npm run -s lint 2>&1); then
     fail+=$'\n== Mermaid diagrams failed to parse ==\n'"$(echo "$out" | tail -20)"
   fi
 fi

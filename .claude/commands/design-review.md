@@ -1,10 +1,8 @@
 ---
-description: Review the current branch against the Lego rules, ADRs and security baseline using reviewer subagents
+description: Review the current branch with the architecture and security reviewer subagents
 ---
 
-1. Collect the diff: `git diff $(git merge-base HEAD origin/main)...HEAD` and untracked files.
-2. Launch the `architecture-reviewer` and `security-reviewer` subagents in parallel with that diff and the list of
-   changed files.
-3. Merge their findings into one list ordered by severity (blocker, major, minor). Each finding names its file and
-   line, the rule broken (CLAUDE.md section, ADR or LLD section) and a concrete fix.
-4. Don't change code during the review. Ask the user which findings to fix.
+1. Get the diff: `git diff origin/main...HEAD` (and uncommitted changes).
+2. Run the `architecture-reviewer` and `security-reviewer` subagents on it, in parallel.
+3. Merge their findings into one list, most important first, each with file:line, the problem and the fix.
+   Don't edit files unless the user asks.
