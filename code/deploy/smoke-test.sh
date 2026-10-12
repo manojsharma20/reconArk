@@ -8,6 +8,15 @@ DIR="$(cd "$(dirname "$0")/sample-data" && pwd)"
 json() { python3 -c "import json,sys; print(json.load(sys.stdin)$1)"; }
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
+echo "0. Wait until every service answers"
+for path in /api/plugins /api/files /api/runs /api/reports/formats; do
+  for i in $(seq 1 60); do
+    curl -fsS -o /dev/null "$BASE$path" 2>/dev/null && break
+    [ "$i" = 60 ] && fail "$BASE$path does not answer"
+    sleep 2
+  done
+done
+
 echo "1. Create the definition"
 definition=$(python3 - "$DIR/definition.json" <<'PY'
 import json, sys, time
