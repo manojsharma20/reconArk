@@ -7,7 +7,7 @@
     "lint": "node validate-mermaid.mjs .. ../../README.md ../../CLAUDE.md"
   },
   "dependencies": {
-    "jsdom": "^30.1.2",
+    "jsdom": "^30.1.3",
     "mermaid": "^12.1.0"
   }
 }
